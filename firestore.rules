@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// These rules lock down the data so users CANNOT edit their own scan count or
+// scan limit from the browser. All limit changes go through the server (Admin SDK),
+// which bypasses these rules. Paste these into:
+//   Firebase Console > Firestore Database > Rules > Publish
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId} {
+      // A user may read their own profile, but never write it.
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if false;
+
+      // Saved split history: the user can read and create their own records.
+      match /scans/{scanId} {
+        allow read, create: if request.auth != null && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+    }
+  }
+}

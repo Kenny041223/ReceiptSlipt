@@ -7,7 +7,7 @@ import { auth } from '@/lib/firebase'
 import { useAuth } from './AuthProvider'
 
 export default function Header() {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const pathname = usePathname()
 
   return (
@@ -19,6 +19,26 @@ export default function Header() {
         <nav className="flex items-center gap-4 text-sm">
           {user ? (
             <>
+              {profile && !profile.isAdmin && profile.remaining !== null && (
+                <span
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                    profile.remaining > 0
+                      ? 'bg-gray-100 text-gray-500'
+                      : 'bg-red-50 text-red-500'
+                  }`}
+                  title="Receipt scans remaining"
+                >
+                  {profile.remaining} scans left
+                </span>
+              )}
+              {profile?.isAdmin && (
+                <Link
+                  href="/admin"
+                  className={`hover:text-gray-900 transition-colors ${pathname === '/admin' ? 'text-indigo-600 font-medium' : 'text-gray-500'}`}
+                >
+                  Admin
+                </Link>
+              )}
               <Link
                 href="/history"
                 className={`hover:text-gray-900 transition-colors ${pathname === '/history' ? 'text-indigo-600 font-medium' : 'text-gray-500'}`}

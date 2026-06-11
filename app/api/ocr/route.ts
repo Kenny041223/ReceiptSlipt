@@ -1,9 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { FieldValue } from 'firebase-admin/firestore'
+import { verifyRequest, getOrCreateUser, isAdminEmail } from '@/lib/apiAuth'
+import { adminDb } from '@/lib/firebaseAdmin'
 
 const API_KEY = process.env.GOOGLE_VISION_API_KEY!
 const ENDPOINT = `https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`
 
 export async function POST(req: NextRequest) {
+  // 1. Authenticate the user
+  let uid: string
+  let email: string | null
+  try {
+    ({ uid, email } = await verifyRequest(req))
+  } catch {
+    return NextResponse.json({ error: 'You must be signed in to scan.' }, { status: 401 })
+  }
+
+  // 2. Check the user's scan allowance (admins are unlimited)
+  const admin = isAdminEmail(email)
+  const userData = await getOrCreateUser(uid, email)
+  if (!admin && userData.scanCount >= userData.scanLimit) {
+    return NextResponse.json(
+      { error: 'limit', scanLimit: userData.scanLimit, scanCount: userData.scanCount },
+      { status: 403 }
+    )
+  }
+
+  // 3. Run OCR
   try {
     const form = await req.formData()
     const image = form.get('image') as File | null
@@ -35,7 +58,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No text found in image' }, { status: 422 })
     }
 
-    return NextResponse.json({ rawText })
+    // 4. Count the scan (only successful scans, and not for admins)
+    let newCount = userData.scanCount
+    if (!admin) {
+      await adminDb().collection('users').doc(uid).update({ scanCount: FieldValue.increment(1) })
+      newCount = userData.scanCount + 1
+    }
+
+    return NextResponse.json({
+      rawText,
+      scanCount: newCount,
+      scanLimit: userData.scanLimit,
+      remaining: admin ? null : Math.max(0, userData.scanLimit - newCount),
+    })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

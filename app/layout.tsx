@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/components/AuthProvider'
+import AuthGate from '@/components/AuthGate'
 import Header from '@/components/Header'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${inter.className} bg-gray-50 min-h-screen`}>
         <AuthProvider>
           <Header />
-          <main>{children}</main>
+          <main>
+            <AuthGate>{children}</AuthGate>
+          </main>
         </AuthProvider>
       </body>
     </html>

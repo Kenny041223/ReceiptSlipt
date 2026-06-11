@@ -4,17 +4,22 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { parseReceiptText } from '@/lib/receiptParser'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
+import { useAuth } from '@/components/AuthProvider'
+import { auth } from '@/lib/firebase'
 import { ReceiptItem } from '@/types'
 import ItemEditor from '@/components/ItemEditor'
+import LimitReachedModal from '@/components/LimitReachedModal'
 
-type Status = 'scanning' | 'editing' | 'error'
+type Status = 'scanning' | 'editing' | 'error' | 'limit'
 
 export default function ScanPage() {
   const router = useRouter()
   const { updateSession } = useReceiptSession()
+  const { refreshProfile } = useAuth()
   const [status, setStatus] = useState<Status>('scanning')
   const [items, setItems] = useState<ReceiptItem[]>([])
   const [error, setError] = useState('')
+  const [limit, setLimit] = useState(0)
   const [preview, setPreview] = useState('')
   const didRun = useRef(false)
 
@@ -30,20 +35,35 @@ export default function ScanPage() {
 
     const doOCR = async () => {
       try {
+        const current = auth.currentUser
+        if (!current) { router.replace('/login'); return }
+        const token = await current.getIdToken()
+
         const fetchRes = await fetch(imgData)
         const blob = await fetchRes.blob()
 
         const form = new FormData()
         form.append('image', new File([blob], 'receipt.jpg', { type: imgType || 'image/jpeg' }))
 
-        const res = await fetch('/api/ocr', { method: 'POST', body: form })
+        const res = await fetch('/api/ocr', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        })
         const data = await res.json()
+
+        if (res.status === 403 && data.error === 'limit') {
+          setLimit(data.scanLimit)
+          setStatus('limit')
+          return
+        }
         if (!res.ok) throw new Error(data.error || 'OCR failed')
 
         const parsed = parseReceiptText(data.rawText)
         const receiptItems: ReceiptItem[] = parsed.map(p => ({ ...p, assignedTo: [] }))
         setItems(receiptItems)
         updateSession({ items: receiptItems, rawText: data.rawText })
+        refreshProfile()
         setStatus('editing')
       } catch (e: any) {
         setError(e.message)
@@ -53,6 +73,10 @@ export default function ScanPage() {
 
     doOCR()
   }, [])
+
+  if (status === 'limit') {
+    return <LimitReachedModal scanLimit={limit} />
+  }
 
   if (status === 'scanning') {
     return (
