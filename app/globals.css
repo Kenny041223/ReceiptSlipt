@@ -61,10 +61,10 @@ html, body {
 body {
   background-color: var(--bg-base);
   background-image:
-    radial-gradient(55vw 55vw at -6% -12%, var(--blob-1) 0%, rgba(224,195,252,0) 65%),
-    radial-gradient(50vw 50vw at 106% 10%, var(--blob-2) 0%, rgba(142,197,252,0) 65%),
-    radial-gradient(62vw 62vw at 45% 112%, var(--blob-3) 0%, rgba(255,196,184,0) 70%),
-    linear-gradient(155deg, #EDE6FE 0%, #EEF3FE 45%, #FCEDE9 100%);
+    radial-gradient(46vw 46vw at -8% -12%, rgba(224,195,252,.85) 0%, rgba(224,195,252,0) 62%),
+    radial-gradient(42vw 42vw at 108% 6%, rgba(142,197,252,.7) 0%, rgba(142,197,252,0) 62%),
+    radial-gradient(38vw 30vw at 50% 112%, rgba(255,184,166,.75) 0%, rgba(255,184,166,0) 66%),
+    linear-gradient(165deg, #F1ECFD 0%, #F3F6FE 55%, #F7F3F0 100%);
   background-attachment: fixed;
 }
 
@@ -83,7 +83,7 @@ body {
   position: absolute;
   border-radius: 50%;
   filter: blur(60px);
-  opacity: .85;
+  opacity: .45;
   will-change: transform;
   animation-duration: var(--motion-dur);
   animation-timing-function: ease-in-out;
@@ -92,7 +92,7 @@ body {
 }
 .blob--1 { width: 52vw; height: 52vw; top: -14vw; left: -8vw;  background: radial-gradient(circle at 30% 30%, var(--blob-1), transparent 68%); animation-name: drift1; }
 .blob--2 { width: 46vw; height: 46vw; top: 8vw; right: -10vw;  background: radial-gradient(circle at 60% 40%, var(--blob-2), transparent 68%); animation-name: drift2; }
-.blob--3 { width: 58vw; height: 58vw; bottom: -20vw; left: 22vw; background: radial-gradient(circle at 50% 50%, var(--blob-3), transparent 70%); animation-name: drift3; }
+.blob--3 { width: 42vw; height: 42vw; bottom: -16vw; left: 29vw; background: radial-gradient(circle at 50% 50%, var(--blob-3), transparent 70%); animation-name: drift3; }
 @keyframes drift1 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(8vw,6vw) scale(1.12);} 66%{transform:translate(3vw,-4vw) scale(.96);} }
 @keyframes drift2 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(-7vw,5vw) scale(1.08);} 66%{transform:translate(-2vw,9vw) scale(.94);} }
 @keyframes drift3 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(-6vw,-6vw) scale(1.1);} 66%{transform:translate(7vw,-2vw) scale(.97);} }
