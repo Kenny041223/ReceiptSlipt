@@ -12,6 +12,9 @@ export default function Header() {
   const { user, profile } = useAuth()
   const pathname = usePathname()
 
+  // The login screen is a full-bleed auth experience — no top bar.
+  if (pathname === '/login') return null
+
   const displayName = user?.displayName || user?.email || 'You'
 
   return (
