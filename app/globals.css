@@ -1,3 +1,6 @@
+/* @import must be the first rule in the stylesheet or browsers drop it (fonts were not loading) */
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@600,500,700&f[]=satoshi@500,700,400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,7 +8,6 @@
 /* ============================================================
    Tally — Soft Glass design system (adapted for Next.js app)
    ============================================================ */
-@import url('https://api.fontshare.com/v2/css?f[]=clash-display@600,500,700&f[]=satoshi@500,700,400&display=swap');
 
 :root {
   --font-display: 'Clash Display', sans-serif;
@@ -50,9 +52,20 @@ html, body {
   font-family: var(--font-body);
   font-weight: 500;
   color: var(--text);
-  background: var(--bg-base);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* The full mesh gradient lives on body with fixed attachment, so it ALWAYS
+   covers the whole viewport on every page regardless of content height. */
+body {
+  background-color: var(--bg-base);
+  background-image:
+    radial-gradient(55vw 55vw at -6% -12%, var(--blob-1) 0%, rgba(224,195,252,0) 65%),
+    radial-gradient(50vw 50vw at 106% 10%, var(--blob-2) 0%, rgba(142,197,252,0) 65%),
+    radial-gradient(62vw 62vw at 45% 112%, var(--blob-3) 0%, rgba(255,196,184,0) 70%),
+    linear-gradient(155deg, #EDE6FE 0%, #EEF3FE 45%, #FCEDE9 100%);
+  background-attachment: fixed;
 }
 
 /* ---------- Animated mesh background ---------- */
@@ -61,8 +74,10 @@ html, body {
   inset: 0;
   z-index: -1;
   overflow: hidden;
-  /* full-bleed soft gradient base so the backdrop never looks split in half */
-  background: linear-gradient(155deg, #EDE6FE 0%, #EEF3FE 45%, #FCEDE9 100%);
+  /* base gradient is painted by body (background-attachment: fixed);
+     this layer only carries the slowly drifting animated blobs */
+  background: transparent;
+  pointer-events: none;
 }
 .blob {
   position: absolute;
