@@ -137,6 +137,32 @@ export default function HomePage() {
         </>
       )}
 
+      {/* scan quota tracker */}
+      {profile && !profile.isAdmin && profile.remaining !== null && (
+        <>
+          <div className="section-label">
+            <h2 className="display" style={{ fontSize: 22 }}>Scan tracker</h2>
+            <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>{profile.scanLimit} scans per account</span>
+          </div>
+          <div className="glass" style={{ padding: '16px 22px', marginBottom: 32 }}>
+            <div className="bl-row" style={{ borderBottom: 0 }}>
+              <span className="bl-dot" style={{ background: 'var(--primary)' }} />
+              <span className="bl-name">Receipt scans</span>
+              <span className="bl-bar" style={{ width: 'auto', flex: 1 }}>
+                <span style={{
+                  width: `${Math.min(100, (profile.scanCount / Math.max(1, profile.scanLimit)) * 100)}%`,
+                  background: profile.remaining <= 3 ? 'var(--primary)' : 'var(--accent)',
+                }} />
+              </span>
+              <span className="bl-amt">
+                <b className={profile.remaining <= 3 ? 'coral' : ''}>{profile.remaining}</b>
+                <span className="muted" style={{ fontSize: 12 }}> left</span>
+              </span>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* dropzone */}
       <div
         className={`dropzone ${dragging ? 'is-over' : ''}`}
