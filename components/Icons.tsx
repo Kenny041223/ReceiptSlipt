@@ -54,3 +54,6 @@ export const CopyIcon = (p: P) => (
 export const EditIcon = (p: P) => (
   <svg {...base} {...p}><path d="M4 20h4L18.5 9.5a2 2 0 0 0 0-2.8l-1.2-1.2a2 2 0 0 0-2.8 0L4 16z" /></svg>
 )
+export const FlipIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M4 9a8 8 0 0 1 13-3l2 2M20 15a8 8 0 0 1-13 3l-2-2" /><path d="M19 4v4h-4M5 20v-4h4" /></svg>
+)

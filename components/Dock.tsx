@@ -2,9 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from './AuthProvider'
-import { CameraIcon, ReceiptIcon, StatsIcon } from './Icons'
-
-const FLOW = ['/', '/scan', '/split', '/summary']
+import { CameraIcon, ProfileIcon, StatsIcon } from './Icons'
 
 export default function Dock() {
   const router = useRouter()
@@ -14,28 +12,25 @@ export default function Dock() {
   // Hide the dock on the login screen / when signed out
   if (!user || pathname === '/login') return null
 
-  const homeActive = FLOW.includes(pathname)
-  const historyActive = pathname.startsWith('/history')
-
   return (
     <div className="dock-wrap">
       <div className="dock">
         <button
-          className={`dock__btn ${homeActive ? 'is-active' : ''}`}
-          onClick={() => router.push('/')}
-          aria-label="Home"
+          className={`dock__btn ${pathname.startsWith('/history') ? 'is-active' : ''}`}
+          onClick={() => router.push('/history')}
+          aria-label="Activity"
         >
-          <ReceiptIcon />
+          <StatsIcon />
         </button>
         <button className="dock__cam" onClick={() => router.push('/')} aria-label="New scan">
           <CameraIcon />
         </button>
         <button
-          className={`dock__btn ${historyActive ? 'is-active' : ''}`}
-          onClick={() => router.push('/history')}
-          aria-label="History"
+          className={`dock__btn ${pathname === '/dashboard' ? 'is-active' : ''}`}
+          onClick={() => router.push('/dashboard')}
+          aria-label="Home"
         >
-          <StatsIcon />
+          <ProfileIcon />
         </button>
       </div>
     </div>
