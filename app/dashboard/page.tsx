@@ -15,6 +15,8 @@ interface SplitDoc {
   results: { personName: string; total: number }[]
 }
 
+const C = 2 * Math.PI * 46
+
 export default function DashboardPage() {
   const router = useRouter()
   const { user, profile } = useAuth()
@@ -45,9 +47,17 @@ export default function DashboardPage() {
   const name = (user?.displayName || user?.email || 'there').split(/[ @]/)[0]
   const today = new Date().toLocaleDateString('en-MY', { weekday: 'long', day: 'numeric', month: 'long' })
 
-  // donut geometry
-  const C = 2 * Math.PI * 46
+  // spend donut geometry
   let offset = 0
+
+  // scan pie numbers
+  const isAdmin = !!profile?.isAdmin
+  const scanLimit = profile?.scanLimit ?? 0
+  const scanUsed = profile?.scanCount ?? 0
+  const scanLeft = profile?.remaining ?? 0
+  const usedLen = !isAdmin && scanLimit > 0 ? Math.min(1, scanUsed / scanLimit) * C : 0
+  const pctUsed = scanLimit > 0 ? Math.min(100, (scanUsed / scanLimit) * 100) : 0
+  const low = !isAdmin && scanLeft <= 3
 
   return (
     <div className="page">
@@ -68,7 +78,7 @@ export default function DashboardPage() {
         </div>
         <div className="stat glass">
           <p className="stat__label">Scans left</p>
-          <div className="stat__val">{profile?.isAdmin ? '∞' : (profile?.remaining ?? '—')}</div>
+          <div className="stat__val">{isAdmin ? '∞' : (profile?.remaining ?? '—')}</div>
         </div>
         <div className="stat glass">
           <p className="stat__label">Splits saved</p>
@@ -76,71 +86,101 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* budget / spending tracker */}
-      {spend.rows.length > 0 && (
+      {/* spending-by-person pie — always visible */}
+      <div className="section-label">
+        <h2 className="display" style={{ fontSize: 22 }}>Split tracker</h2>
+        <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>across your saved splits</span>
+      </div>
+      <div className="budget-card glass" style={{ marginBottom: 32 }}>
+        <div className="donut-wrap">
+          <svg viewBox="0 0 120 120" className="donut">
+            <circle className="donut__track" cx="60" cy="60" r="46" fill="none" />
+            {spend.rows.map(row => {
+              const len = spend.grand ? (row.total / spend.grand) * C : 0
+              const seg = (
+                <circle key={row.name} cx="60" cy="60" r="46" fill="none"
+                  stroke={avatarColor(row.name)} strokeWidth="15"
+                  strokeDasharray={`${len} ${C - len}`} strokeDashoffset={-offset} />
+              )
+              offset += len
+              return seg
+            })}
+          </svg>
+          <div className="donut__center">
+            <div className="n tnum">RM {spend.grand.toFixed(0)}</div>
+            <div className="l">total spent</div>
+          </div>
+        </div>
+        <div className="budget-legend">
+          {spend.rows.length === 0 ? (
+            <div className="preview-empty" style={{ padding: '28px 10px' }}>
+              <ReceiptIcon />
+              <div style={{ fontSize: 14 }}>No saved splits yet — each person&apos;s share will appear here once you save a split.</div>
+            </div>
+          ) : (
+            spend.rows.map(row => {
+              const pct = spend.grand ? (row.total / spend.grand) * 100 : 0
+              return (
+                <div className="bl-row" key={row.name}>
+                  <span className="bl-dot" style={{ background: avatarColor(row.name) }} />
+                  <span className="bl-name">{row.name}</span>
+                  <span className="bl-bar"><span style={{ width: pct + '%', background: avatarColor(row.name) }} /></span>
+                  <span className="bl-amt"><b>RM {row.total.toFixed(2)}</b></span>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </div>
+
+      {/* scan-quota pie */}
+      {profile && (
         <>
           <div className="section-label">
-            <h2 className="display" style={{ fontSize: 22 }}>Spending by person</h2>
-            <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>across your saved splits</span>
+            <h2 className="display" style={{ fontSize: 22 }}>Scan tracker</h2>
+            <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>
+              {isAdmin ? 'admin · unlimited scans' : `${scanLimit} scans per account`}
+            </span>
           </div>
           <div className="budget-card glass" style={{ marginBottom: 32 }}>
             <div className="donut-wrap">
               <svg viewBox="0 0 120 120" className="donut">
-                <circle className="donut__track" cx="60" cy="60" r="46" fill="none" />
-                {spend.rows.map(row => {
-                  const len = spend.grand ? (row.total / spend.grand) * C : 0
-                  const seg = (
-                    <circle key={row.name} cx="60" cy="60" r="46" fill="none"
-                      stroke={avatarColor(row.name)} strokeWidth="15"
-                      strokeDasharray={`${len} ${C - len}`} strokeDashoffset={-offset} />
-                  )
-                  offset += len
-                  return seg
-                })}
+                {/* remaining = mint base ring */}
+                <circle cx="60" cy="60" r="46" fill="none" stroke="var(--accent)" strokeWidth="15" />
+                {/* used = coral arc on top */}
+                {!isAdmin && usedLen > 0 && (
+                  <circle cx="60" cy="60" r="46" fill="none" stroke="var(--primary)" strokeWidth="15"
+                    strokeDasharray={`${usedLen} ${C - usedLen}`} />
+                )}
               </svg>
               <div className="donut__center">
-                <div className="n tnum">RM {spend.grand.toFixed(0)}</div>
-                <div className="l">total spent</div>
+                <div className={`n tnum ${low ? 'coral' : ''}`}>{isAdmin ? '∞' : scanLeft}</div>
+                <div className="l">{isAdmin ? 'unlimited' : 'scans left'}</div>
               </div>
             </div>
             <div className="budget-legend">
-              {spend.rows.map(row => {
-                const pct = spend.grand ? (row.total / spend.grand) * 100 : 0
-                return (
-                  <div className="bl-row" key={row.name}>
-                    <span className="bl-dot" style={{ background: avatarColor(row.name) }} />
-                    <span className="bl-name">{row.name}</span>
-                    <span className="bl-bar"><span style={{ width: pct + '%', background: avatarColor(row.name) }} /></span>
-                    <span className="bl-amt"><b>RM {row.total.toFixed(2)}</b></span>
+              {isAdmin ? (
+                <div className="bl-row">
+                  <span className="bl-dot" style={{ background: 'var(--accent)' }} />
+                  <span className="bl-name">Admin account</span>
+                  <span className="bl-amt"><b>Unlimited</b></span>
+                </div>
+              ) : (
+                <>
+                  <div className="bl-row">
+                    <span className="bl-dot" style={{ background: 'var(--primary)' }} />
+                    <span className="bl-name">Used</span>
+                    <span className="bl-bar"><span style={{ width: pctUsed + '%', background: 'var(--primary)' }} /></span>
+                    <span className="bl-amt"><b>{scanUsed}</b> <span className="muted" style={{ fontSize: 12 }}>scans</span></span>
                   </div>
-                )
-              })}
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* scan quota tracker */}
-      {profile && !profile.isAdmin && profile.remaining !== null && (
-        <>
-          <div className="section-label">
-            <h2 className="display" style={{ fontSize: 22 }}>Scan tracker</h2>
-            <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>{profile.scanLimit} scans per account</span>
-          </div>
-          <div className="glass" style={{ padding: '16px 22px', marginBottom: 32 }}>
-            <div className="bl-row" style={{ borderBottom: 0 }}>
-              <span className="bl-dot" style={{ background: 'var(--primary)' }} />
-              <span className="bl-name">Receipt scans</span>
-              <span className="bl-bar" style={{ width: 'auto', flex: 1 }}>
-                <span style={{
-                  width: `${Math.min(100, (profile.scanCount / Math.max(1, profile.scanLimit)) * 100)}%`,
-                  background: profile.remaining <= 3 ? 'var(--primary)' : 'var(--accent)',
-                }} />
-              </span>
-              <span className="bl-amt">
-                <b className={profile.remaining <= 3 ? 'coral' : ''}>{profile.remaining}</b>
-                <span className="muted" style={{ fontSize: 12 }}> left</span>
-              </span>
+                  <div className="bl-row">
+                    <span className="bl-dot" style={{ background: 'var(--accent)' }} />
+                    <span className="bl-name">Remaining</span>
+                    <span className="bl-bar"><span style={{ width: (100 - pctUsed) + '%', background: 'var(--accent)' }} /></span>
+                    <span className="bl-amt"><b className={low ? 'coral' : ''}>{scanLeft}</b> <span className="muted" style={{ fontSize: 12 }}>left</span></span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </>
