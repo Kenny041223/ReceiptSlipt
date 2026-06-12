@@ -26,9 +26,9 @@ export default function Dock() {
           <CameraIcon />
         </button>
         <button
-          className={`dock__btn ${pathname === '/dashboard' ? 'is-active' : ''}`}
-          onClick={() => router.push('/dashboard')}
-          aria-label="Home"
+          className={`dock__btn ${pathname.startsWith('/friends') ? 'is-active' : ''}`}
+          onClick={() => router.push('/friends')}
+          aria-label="Friends"
         >
           <ProfileIcon />
         </button>

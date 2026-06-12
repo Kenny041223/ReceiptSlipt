@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
+import { useFriends } from '@/hooks/useFriends'
 import { Person, ReceiptItem } from '@/types'
 import { avatarGradient, initials } from '@/lib/avatar'
 import { ArrowRightIcon, PlusIcon } from '@/components/Icons'
@@ -12,6 +13,7 @@ const TIP_PRESETS = [0, 5, 10, 15]
 export default function SplitPage() {
   const router = useRouter()
   const { session, updateSession } = useReceiptSession()
+  const { friends } = useFriends()
   const [people, setPeople] = useState<Person[]>([])
   const [items, setItems] = useState<ReceiptItem[]>([])
   const [active, setActive] = useState<string>('')
@@ -22,12 +24,29 @@ export default function SplitPage() {
   useEffect(() => {
     if (!session) return
     if (session.items.length === 0) { router.replace('/'); return }
-    setPeople(session.people)
     setItems(session.items)
     setTaxRate(session.taxRate || 0)
     setTipPct(session.tipPct || 0)
-    if (session.people[0]) setActive(session.people[0].id)
+    if (session.people.length > 0) {
+      setPeople(session.people)
+      setActive(session.people[0].id)
+    }
   }, [session])
+
+  // Fresh split with no people yet → start with the saved friends roster
+  useEffect(() => {
+    if (!session || session.people.length > 0) return
+    if (friends.length === 0) return
+    setPeople(prev => {
+      if (prev.length > 0) return prev
+      const seeded = friends.map(f => ({ id: f.id, name: f.name }))
+      setActive(seeded[0].id)
+      return seeded
+    })
+  }, [friends, session])
+
+  // saved friends not currently in the split → one-tap quick add
+  const quickAdd = friends.filter(f => !people.some(p => p.name.toLowerCase() === f.name.toLowerCase()))
 
   // shares: unassigned items are shared by everyone
   const { per, subtotal } = useMemo(() => {
@@ -155,6 +174,23 @@ export default function SplitPage() {
             />
             <button className="roster__add" onClick={addPerson} aria-label="Add person"><PlusIcon /></button>
           </div>
+
+          {quickAdd.length > 0 && (
+            <div>
+              <p className="eyebrow" style={{ fontSize: 11, marginBottom: 8 }}>Saved friends</p>
+              <div className="chips">
+                {quickAdd.map(f => (
+                  <button
+                    key={f.id}
+                    className="chip"
+                    onClick={() => { setPeople([...people, { id: f.id, name: f.name }]); setActive(f.id) }}
+                  >
+                    + {f.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {people.length > 0 && (
             <div>

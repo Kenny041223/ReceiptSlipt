@@ -18,6 +18,12 @@ service cloud.firestore {
         allow read, create: if request.auth != null && request.auth.uid == userId;
         allow update, delete: if false;
       }
+
+      // Saved friends roster: the user manages their own list.
+      match /friends/{friendId} {
+        allow read, create, delete: if request.auth != null && request.auth.uid == userId;
+        allow update: if false;
+      }
     }
   }
 }
