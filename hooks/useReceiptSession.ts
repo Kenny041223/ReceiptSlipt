@@ -15,7 +15,7 @@ function persist(s: ReceiptSession) {
 }
 
 function fresh(): ReceiptSession {
-  return { id: Date.now().toString(), items: [], people: [], createdAt: Date.now() }
+  return { id: Date.now().toString(), items: [], people: [], taxRate: 0, tipPct: 0, createdAt: Date.now() }
 }
 
 export function useReceiptSession() {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
 import { useAuth } from '@/components/AuthProvider'
@@ -13,37 +13,67 @@ export default function SummaryPage() {
   const router = useRouter()
   const { session, resetSession } = useReceiptSession()
   const { user } = useAuth()
-  const [results, setResults] = useState<SplitResult[]>([])
   const [saved, setSaved] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [paid, setPaid] = useState<Record<string, boolean>>({})
+  const [toast, setToast] = useState<string | null>(null)
 
   useEffect(() => {
     if (!session) return
-    if (session.items.length === 0) { router.replace('/'); return }
-
-    const calc: SplitResult[] = session.people.map(p => ({
-      personId: p.id,
-      personName: p.name,
-      items: [],
-      total: 0,
-    }))
-
-    for (const item of session.items) {
-      if (item.assignedTo.length === 0) continue
-      const share = (item.price * item.quantity) / item.assignedTo.length
-      for (const personId of item.assignedTo) {
-        const r = calc.find(c => c.personId === personId)
-        if (r) {
-          r.items.push({ itemName: item.name, share })
-          r.total += share
-        }
-      }
-    }
-
-    setResults(calc)
+    if (session.items.length === 0) router.replace('/')
   }, [session])
 
-  const total = results.reduce((s, r) => s + r.total, 0)
+  const { results, grand } = useMemo(() => {
+    if (!session) return { results: [] as SplitResult[], grand: 0 }
+    const people = session.people
+    const base: Record<string, { items: SplitResult['items']; subtotal: number }> = {}
+    people.forEach(p => { base[p.id] = { items: [], subtotal: 0 } })
+
+    let subtotal = 0
+    for (const item of session.items) {
+      const line = item.price * item.quantity
+      subtotal += line
+      const assignees = item.assignedTo.filter(id => people.some(p => p.id === id))
+      const targets = assignees.length ? assignees : people.map(p => p.id)
+      if (targets.length === 0) continue
+      const share = line / targets.length
+      const shared = targets.length > 1
+      targets.forEach(id => {
+        base[id].items.push({ itemName: item.name, share, shared })
+        base[id].subtotal += share
+      })
+    }
+
+    const taxTotal = subtotal * ((session.taxRate || 0) / 100)
+    const tipTotal = subtotal * ((session.tipPct || 0) / 100)
+
+    const results: SplitResult[] = people.map(p => {
+      const sub = base[p.id].subtotal
+      const ratio = subtotal ? sub / subtotal : 0
+      const tax = taxTotal * ratio
+      const tip = tipTotal * ratio
+      return {
+        personId: p.id,
+        personName: p.name,
+        items: base[p.id].items,
+        subtotal: sub,
+        tax,
+        tip,
+        total: sub + tax + tip,
+      }
+    })
+
+    return { results, grand: subtotal + taxTotal + tipTotal }
+  }, [session])
+
+  const flash = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 1900) }
+  const togglePaid = (id: string) => setPaid(prev => ({ ...prev, [id]: !prev[id] }))
+
+  const copyLink = () => {
+    const lines = results.map(r => `${r.personName}: RM ${r.total.toFixed(2)}`).join('\n')
+    const text = `Receipt split — Total RM ${grand.toFixed(2)}\n${lines}`
+    navigator.clipboard?.writeText(text).then(() => flash('Split summary copied to clipboard'))
+  }
 
   const saveToHistory = async () => {
     if (!user || !session) return
@@ -52,6 +82,8 @@ export default function SummaryPage() {
       await addDoc(collection(db, 'users', user.uid, 'scans'), {
         items: session.items,
         people: session.people,
+        taxRate: session.taxRate || 0,
+        tipPct: session.tipPct || 0,
         results,
         createdAt: serverTimestamp(),
       })
@@ -64,41 +96,28 @@ export default function SummaryPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="flex items-baseline justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Summary</h1>
-        <p className="text-sm font-semibold text-gray-500">
-          Total: <span className="text-gray-900">RM {total.toFixed(2)}</span>
-        </p>
+    <div className="page">
+      <div className="sum-banner glass glass--strong">
+        <div className="sum-banner__label">Total Bill</div>
+        <div className="sum-banner__amt coral tnum">RM {grand.toFixed(2)}</div>
+        <div className="sum-banner__sub">Split across {results.length} {results.length === 1 ? 'person' : 'people'}</div>
       </div>
 
-      <SplitSummary results={results} />
+      <SplitSummary results={results} paid={paid} onTogglePaid={togglePaid} onCopy={copyLink} />
 
-      <div className="mt-8 space-y-3">
+      <div style={{ marginTop: 28, display: 'grid', gap: 12, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto' }}>
         {user && !saved && (
-          <button
-            onClick={saveToHistory}
-            disabled={saving}
-            className="w-full py-3 border-2 border-indigo-200 text-indigo-600 font-semibold rounded-xl hover:bg-indigo-50 transition-colors disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : '💾 Save to History'}
+          <button onClick={saveToHistory} disabled={saving} className="btn btn--ghost btn--block">
+            {saving ? 'Saving…' : '💾 Save to History'}
           </button>
         )}
-        {saved && (
-          <p className="text-center text-sm text-green-600 font-medium py-2">Saved to your history ✓</p>
-        )}
-        {!user && (
-          <p className="text-center text-sm text-gray-400">
-            <a href="/login" className="text-indigo-500 hover:underline">Sign in</a> to save your split history
-          </p>
-        )}
-        <button
-          onClick={() => { resetSession(); router.push('/') }}
-          className="w-full py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors"
-        >
+        {saved && <p className="green" style={{ textAlign: 'center', fontWeight: 700, fontSize: 14 }}>Saved to your history ✓</p>}
+        <button onClick={() => { resetSession(); router.push('/') }} className="btn btn--primary btn--block">
           Split Another Receipt
         </button>
       </div>
+
+      {toast && <div className="toast">✓ {toast}</div>}
     </div>
   )
 }

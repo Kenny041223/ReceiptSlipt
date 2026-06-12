@@ -20,8 +20,8 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-32">
-        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+      <div style={{ display: 'grid', placeItems: 'center', padding: '120px 0' }}>
+        <div className="spinner" />
       </div>
     )
   }

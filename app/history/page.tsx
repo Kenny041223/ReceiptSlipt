@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { db } from '@/lib/firebase'
 import { collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore'
+import { avatarGradient, initials } from '@/lib/avatar'
 
 interface ScanRecord {
   id: string
@@ -27,46 +28,45 @@ export default function HistoryPage() {
       .then(snap => {
         setScans(snap.docs.map(d => ({ id: d.id, ...d.data() } as ScanRecord)))
       })
+      .catch(err => console.error('Could not load history:', err))
       .finally(() => setFetching(false))
   }, [user, loading])
 
   if (loading || fetching) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-16 text-center text-gray-400 text-sm">
-        Loading...
+      <div className="page" style={{ display: 'grid', placeItems: 'center', minHeight: '50vh' }}>
+        <div className="spinner" />
       </div>
     )
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Split History</h1>
+    <div className="page page--narrow">
+      <h1 className="display" style={{ fontSize: 30, marginBottom: 24 }}>Split History</h1>
 
       {scans.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
-          <p className="text-4xl mb-3">🧾</p>
-          <p className="text-sm">No saved splits yet</p>
-          <a href="/" className="text-indigo-500 text-sm hover:underline mt-2 inline-block">
-            Split your first receipt
-          </a>
+        <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--muted)' }}>
+          <p style={{ fontSize: 40, marginBottom: 12 }}>🧾</p>
+          <p style={{ fontSize: 14 }}>No saved splits yet</p>
+          <a href="/" className="coral" style={{ fontSize: 14, fontWeight: 700, marginTop: 8, display: 'inline-block' }}>Split your first receipt</a>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div style={{ display: 'grid', gap: 12 }}>
           {scans.map(scan => {
             const total = scan.results?.reduce((s, r) => s + (r.total || 0), 0) ?? 0
             const date = scan.createdAt?.toDate?.()
             return (
-              <div key={scan.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="text-sm text-gray-400">
+              <div key={scan.id} className="glass" style={{ padding: 18 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <span className="muted" style={{ fontSize: 13 }}>
                     {date ? date.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                   </span>
-                  <span className="font-bold text-indigo-600 text-sm">RM {total.toFixed(2)}</span>
+                  <b className="coral tnum" style={{ fontFamily: 'var(--font-display)' }}>RM {total.toFixed(2)}</b>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+                <div style={{ display: 'flex', alignItems: 'center' }} className="item__assignees">
                   {scan.people?.map(p => (
-                    <span key={p.id} className="text-xs bg-gray-100 text-gray-500 px-2.5 py-0.5 rounded-full">
-                      {p.name}
+                    <span key={p.id} className="av av--sm" style={{ background: avatarGradient(p.name) }} title={p.name}>
+                      {initials(p.name)}
                     </span>
                   ))}
                 </div>

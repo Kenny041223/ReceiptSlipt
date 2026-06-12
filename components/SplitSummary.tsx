@@ -1,28 +1,69 @@
+'use client'
+
 import { SplitResult } from '@/types'
+import { avatarGradient, initials } from '@/lib/avatar'
+import { CheckIcon, CopyIcon } from './Icons'
 
 interface Props {
   results: SplitResult[]
+  paid: Record<string, boolean>
+  onTogglePaid: (id: string) => void
+  onCopy: () => void
 }
 
-export default function SplitSummary({ results }: Props) {
+export default function SplitSummary({ results, paid, onTogglePaid, onCopy }: Props) {
   return (
-    <div className="space-y-4">
-      {results.map(person => (
-        <div key={person.personId} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 flex justify-between items-center border-b border-gray-50">
-            <span className="font-semibold text-gray-900">{person.personName}</span>
-            <span className="text-lg font-bold text-indigo-600">RM {person.total.toFixed(2)}</span>
-          </div>
-          <div className="px-5 py-3 space-y-1.5">
-            {person.items.map((item, i) => (
-              <div key={i} className="flex justify-between text-sm">
-                <span className="text-gray-500">{item.itemName}</span>
-                <span className="text-gray-600 font-medium">RM {item.share.toFixed(2)}</span>
+    <div className="person-grid">
+      {results.map((person, idx) => {
+        const isPaid = !!paid[person.personId]
+        const isOrganizer = idx === 0
+        return (
+          <div key={person.personId} className={`person-card glass ${isPaid ? 'is-paid' : ''}`}>
+            {isPaid && <div className="paid-stamp"><CheckIcon style={{ width: 14, height: 14 }} /> PAID</div>}
+
+            <div className="person-card__head">
+              <span className="av av--lg" style={{ background: avatarGradient(person.personName) }}>{initials(person.personName)}</span>
+              <div>
+                <div className="person-card__name">{person.personName}</div>
+                <div className="person-card__role">{isOrganizer ? 'Organizer' : 'Owes'}</div>
               </div>
-            ))}
+            </div>
+
+            <div className="person-card__items">
+              {person.items.map((item, i) => (
+                <div key={i} className="person-card__item">
+                  <span className="muted">{item.itemName}{item.shared ? ' (shared)' : ''}</span>
+                  <span className="tnum">RM {item.share.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+
+            {(person.tax > 0 || person.tip > 0) && (
+              <div className="person-card__break">
+                <div><span>Tax</span><span className="tnum">RM {person.tax.toFixed(2)}</span></div>
+                <div><span>Tip</span><span className="tnum">RM {person.tip.toFixed(2)}</span></div>
+              </div>
+            )}
+
+            <div className="person-card__total">
+              <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>{isOrganizer ? 'Your share' : 'Total owed'}</span>
+              <b className={isPaid ? 'green' : 'coral'}>RM {person.total.toFixed(2)}</b>
+            </div>
+
+            {isOrganizer ? (
+              <button className="btn btn--ghost btn--sm btn--block" onClick={onCopy}><CopyIcon /> Copy split</button>
+            ) : (
+              <div className="person-card__pay">
+                {isPaid ? (
+                  <button className="btn btn--ghost btn--sm btn--block" onClick={() => onTogglePaid(person.personId)}>Undo</button>
+                ) : (
+                  <button className="btn btn--accent btn--sm btn--block" onClick={() => onTogglePaid(person.personId)}><CheckIcon /> Mark paid</button>
+                )}
+              </div>
+            )}
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

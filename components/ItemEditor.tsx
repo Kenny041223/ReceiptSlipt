@@ -1,6 +1,7 @@
 'use client'
 
 import { ReceiptItem } from '@/types'
+import { PlusIcon } from './Icons'
 
 interface Props {
   items: ReceiptItem[]
@@ -19,30 +20,32 @@ export default function ItemEditor({ items, onChange }: Props) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="item-list">
       {items.map(item => (
-        <div key={item.id} className="flex items-center gap-2 bg-white rounded-xl px-4 py-3 shadow-sm border border-gray-100">
+        <div key={item.id} className="item glass">
           <input
-            className="flex-1 text-sm font-medium text-gray-800 outline-none min-w-0"
+            className="ginput ginput--name"
             value={item.name}
             onChange={e => update(item.id, 'name', e.target.value)}
             placeholder="Item name"
           />
-          <div className="flex items-center gap-1 text-sm text-gray-400 shrink-0">
-            <span>×</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="muted">
+            <span style={{ fontSize: 13 }}>×</span>
             <input
               type="number"
-              className="w-8 text-center outline-none text-gray-600"
+              className="ginput tnum"
+              style={{ width: 32, textAlign: 'center' }}
               value={item.quantity}
               min={1}
               onChange={e => update(item.id, 'quantity', Math.max(1, parseInt(e.target.value) || 1))}
             />
           </div>
-          <div className="flex items-center text-sm font-semibold text-gray-900 shrink-0">
-            <span className="text-gray-400 mr-1 text-xs">RM</span>
+          <div className="item__price" style={{ display: 'flex', alignItems: 'center' }}>
+            <span className="muted" style={{ fontSize: 12, marginRight: 4, fontFamily: 'var(--font-body)', fontWeight: 500 }}>RM</span>
             <input
               type="number"
-              className="w-16 text-right outline-none"
+              className="ginput tnum"
+              style={{ width: 64, textAlign: 'right', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17 }}
               value={item.price}
               step="0.01"
               min={0}
@@ -51,7 +54,8 @@ export default function ItemEditor({ items, onChange }: Props) {
           </div>
           <button
             onClick={() => remove(item.id)}
-            className="text-gray-300 hover:text-red-400 text-xl leading-none shrink-0 transition-colors"
+            aria-label="Remove item"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 20, lineHeight: 1 }}
           >
             ×
           </button>
@@ -60,9 +64,10 @@ export default function ItemEditor({ items, onChange }: Props) {
 
       <button
         onClick={add}
-        className="w-full py-2.5 border-2 border-dashed border-gray-200 text-gray-400 text-sm rounded-xl hover:border-indigo-300 hover:text-indigo-400 transition-colors"
+        className="dropzone"
+        style={{ padding: '14px', fontSize: 14, fontWeight: 700, color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
       >
-        + Add item manually
+        <PlusIcon style={{ width: 18, height: 18 }} /> Add item manually
       </button>
     </div>
   )
