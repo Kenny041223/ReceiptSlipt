@@ -20,6 +20,10 @@ export default function SplitPage() {
   const [taxRate, setTaxRate] = useState(0)
   const [tipPct, setTipPct] = useState(0)
   const [newName, setNewName] = useState('')
+  const [adding, setAdding] = useState(false)
+  const [niName, setNiName] = useState('')
+  const [niQty, setNiQty] = useState(1)
+  const [niPrice, setNiPrice] = useState(0)
 
   useEffect(() => {
     if (!session) return
@@ -93,6 +97,13 @@ export default function SplitPage() {
     }))
   }
 
+  const addItem = () => {
+    const name = niName.trim()
+    if (!name || niPrice <= 0) return
+    setItems([...items, { id: Date.now().toString(), name, price: niPrice, quantity: Math.max(1, niQty), assignedTo: [] }])
+    setNiName(''); setNiQty(1); setNiPrice(0); setAdding(false)
+  }
+
   const handleContinue = () => {
     updateSession({ people, items, taxRate, tipPct })
     router.push('/summary')
@@ -144,6 +155,40 @@ export default function SplitPage() {
                 </div>
               )
             })}
+
+            {adding ? (
+              <div className="item glass" style={{ flexWrap: 'wrap', gap: 10 }}>
+                <input
+                  className="ginput ginput--name"
+                  style={{ minWidth: 120 }}
+                  placeholder="Item name"
+                  value={niName}
+                  autoFocus
+                  onChange={e => setNiName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && addItem()}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="muted">
+                  <span style={{ fontSize: 13 }}>×</span>
+                  <input type="number" className="ginput tnum" style={{ width: 34, textAlign: 'center' }}
+                    value={niQty} min={1} onChange={e => setNiQty(Math.max(1, parseInt(e.target.value) || 1))} />
+                </div>
+                <div className="item__price" style={{ display: 'flex', alignItems: 'center' }}>
+                  <span className="muted" style={{ fontSize: 12, marginRight: 4, fontFamily: 'var(--font-body)', fontWeight: 500 }}>RM</span>
+                  <input type="number" className="ginput tnum" style={{ width: 66, textAlign: 'right', fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 17 }}
+                    value={niPrice} step="0.01" min={0} onChange={e => setNiPrice(parseFloat(e.target.value) || 0)} />
+                </div>
+                <button className="btn btn--primary btn--sm" onClick={addItem}>Add</button>
+                <button className="btn btn--ghost btn--sm" onClick={() => { setAdding(false); setNiName(''); setNiQty(1); setNiPrice(0) }}>Cancel</button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setAdding(true)}
+                className="dropzone"
+                style={{ padding: 14, fontSize: 14, fontWeight: 700, color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              >
+                <PlusIcon style={{ width: 18, height: 18 }} /> Add missing item
+              </button>
+            )}
           </div>
         </div>
 
