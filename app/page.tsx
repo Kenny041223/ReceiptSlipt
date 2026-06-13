@@ -33,7 +33,6 @@ export default function ScannerHomePage() {
           <ArrowLeftIcon /> Dashboard
         </button>
         <div className="brand">
-          <span className="brand__mark"><CameraIcon /></span>
           Scan a receipt
         </div>
         <div style={{ width: 120 }} />
