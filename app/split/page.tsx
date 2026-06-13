@@ -126,7 +126,7 @@ export default function SplitPage() {
           <div className="section-label">
             <h2 className="display" style={{ fontSize: 20 }}>Line items</h2>
             <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>
-              Tap an item to pick who shares it
+              Tap to assign people
             </span>
           </div>
 
