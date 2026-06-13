@@ -204,7 +204,17 @@ body {
   transition: transform .28s cubic-bezier(.34,1.56,.64,1), box-shadow .28s ease;
 }
 .dock__cam svg { width: 30px; height: 30px; }
-.dock__cam:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 18px 42px rgba(255,126,103,.62); }
+.dock__cam:hover { transform: scale(1.1); box-shadow: 0 18px 42px rgba(255,126,103,.62); }
+
+/* tearing-receipt animation */
+.break-receipt .brk { transform-box: fill-box; transform-origin: 50% 0%; }
+.break-receipt .brk-l { animation: tearL 1.8s ease-in-out infinite; }
+.break-receipt .brk-r { animation: tearR 1.8s ease-in-out infinite; }
+@keyframes tearL { 0%,38%,100% { transform: translateX(0) rotate(0); } 66% { transform: translateX(-1.7px) rotate(-8deg); } }
+@keyframes tearR { 0%,38%,100% { transform: translateX(0) rotate(0); } 66% { transform: translateX(1.7px) rotate(8deg); } }
+.dock__cam:hover .brk-l { animation-duration: .9s; }
+.dock__cam:hover .brk-r { animation-duration: .9s; }
+@media (prefers-reduced-motion: reduce) { .break-receipt .brk { animation: none !important; } }
 
 /* ---------- Section labels ---------- */
 .section-label { display: flex; align-items: center; justify-content: space-between; margin: 0 0 14px; }
@@ -265,6 +275,12 @@ body {
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { padding: 6px 13px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--muted); transition: all .18s ease; }
 .chip.is-on { background: var(--primary); color: #fff; border-color: transparent; }
+
+/* ---------- Friends grid ---------- */
+.friend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 14px; }
+.friend-tile { position: relative; padding: 22px 14px; border-radius: var(--radius-card); display: grid; justify-items: center; gap: 12px; transition: transform .22s ease, box-shadow .25s ease; }
+.friend-tile:hover { transform: translateY(-3px); box-shadow: var(--shadow-glass-lg); }
+.friend-tile__name { font-family: var(--font-display); font-weight: 600; font-size: 15px; text-align: center; word-break: break-word; }
 
 /* ---------- Roster (people) ---------- */
 .roster__avatars { display: flex; flex-wrap: wrap; gap: 16px; }

@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from './AuthProvider'
-import { CameraIcon, ProfileIcon, StatsIcon } from './Icons'
+import { BreakReceipt, ProfileIcon, UsersIcon } from './Icons'
 
 export default function Dock() {
   const router = useRouter()
@@ -16,19 +16,19 @@ export default function Dock() {
     <div className="dock-wrap">
       <div className="dock">
         <button
-          className={`dock__btn ${pathname.startsWith('/history') ? 'is-active' : ''}`}
-          onClick={() => router.push('/history')}
-          aria-label="Activity"
-        >
-          <StatsIcon />
-        </button>
-        <button className="dock__cam" onClick={() => router.push('/')} aria-label="New scan">
-          <CameraIcon />
-        </button>
-        <button
           className={`dock__btn ${pathname.startsWith('/friends') ? 'is-active' : ''}`}
           onClick={() => router.push('/friends')}
           aria-label="Friends"
+        >
+          <UsersIcon />
+        </button>
+        <button className="dock__cam" onClick={() => router.push('/')} aria-label="New scan">
+          <BreakReceipt />
+        </button>
+        <button
+          className={`dock__btn ${pathname === '/dashboard' ? 'is-active' : ''}`}
+          onClick={() => router.push('/dashboard')}
+          aria-label="Dashboard"
         >
           <ProfileIcon />
         </button>

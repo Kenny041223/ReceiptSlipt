@@ -57,3 +57,21 @@ export const EditIcon = (p: P) => (
 export const FlipIcon = (p: P) => (
   <svg {...base} {...p}><path d="M4 9a8 8 0 0 1 13-3l2 2M20 15a8 8 0 0 1-13 3l-2-2" /><path d="M19 4v4h-4M5 20v-4h4" /></svg>
 )
+export const UsersIcon = (p: P) => (
+  <svg {...base} {...p}><circle cx="9" cy="8" r="3.4" /><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /><path d="M16 4.2a3.4 3.4 0 0 1 0 6.6M17.5 14.6c2 .8 3.5 2.7 3.5 5.4" /></svg>
+)
+
+// Animated receipt that repeatedly tears in half (used in the dock's center button)
+export const BreakReceipt = (p: P) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}
+       strokeLinecap="round" strokeLinejoin="round" className="break-receipt" {...p}>
+    <g className="brk brk-l">
+      <path d="M6 3.5 h5 l-1 2 l1 2 l-1 2 l1 2 l-1 2 l1 2 l-1 2 H6 Z" />
+      <path d="M8 8 h1.6 M8 12 h1.6 M8 16 h1.2" strokeWidth={1.5} />
+    </g>
+    <g className="brk brk-r">
+      <path d="M18 3.5 h-5 l1 2 l-1 2 l1 2 l-1 2 l1 2 l-1 2 l1 2 H18 Z" />
+      <path d="M14.4 8 H16 M14.4 12 H16 M14.8 16 H16" strokeWidth={1.5} />
+    </g>
+  </svg>
+)

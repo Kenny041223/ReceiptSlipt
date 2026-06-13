@@ -44,28 +44,28 @@ export default function FriendsPage() {
 
       {error && <p className="auth-err" style={{ marginBottom: 16 }}>{error}</p>}
 
-      <div className="glass" style={{ padding: 24 }}>
-        {loading ? (
-          <div style={{ display: 'grid', placeItems: 'center', padding: '40px 0' }}>
-            <div className="spinner" />
-          </div>
-        ) : friends.length === 0 ? (
+      {loading ? (
+        <div className="glass" style={{ display: 'grid', placeItems: 'center', padding: '48px 0' }}>
+          <div className="spinner" />
+        </div>
+      ) : friends.length === 0 ? (
+        <div className="glass" style={{ padding: 24 }}>
           <div className="preview-empty">
             <ProfileIcon />
             <div style={{ fontSize: 14 }}>No friends saved yet — add the people you split with most.</div>
           </div>
-        ) : (
-          <div className="roster__avatars" style={{ gap: 20 }}>
-            {friends.map(f => (
-              <div key={f.id} className="roster__person" style={{ width: 72, cursor: 'default' }}>
-                <button className="roster__remove" title={`Remove ${f.name}`} onClick={() => removeFriend(f.id)}>×</button>
-                <span className="av av--xl" style={{ background: avatarGradient(f.name) }}>{initials(f.name)}</span>
-                <span className="roster__name">{f.name}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="friend-grid">
+          {friends.map(f => (
+            <div key={f.id} className="friend-tile glass">
+              <button className="roster__remove" title={`Remove ${f.name}`} onClick={() => removeFriend(f.id)}>×</button>
+              <span className="av av--xl" style={{ background: avatarGradient(f.name) }}>{initials(f.name)}</span>
+              <span className="friend-tile__name">{f.name}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
