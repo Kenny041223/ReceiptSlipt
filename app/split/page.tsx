@@ -97,6 +97,11 @@ export default function SplitPage() {
     setItems(items.map(it => it.id === itemId ? { ...it, assignedTo: all ? people.map(p => p.id) : [] } : it))
   }
 
+  const removeItem = (itemId: string) => {
+    setItems(items.filter(it => it.id !== itemId))
+    if (expandedId === itemId) setExpandedId('')
+  }
+
   const addItem = () => {
     const name = niName.trim()
     if (!name || niPrice <= 0) return
@@ -152,6 +157,14 @@ export default function SplitPage() {
                         return <span key={id} className="av av--xs" style={{ background: avatarGradient(p.name) }}>{initials(p.name)}</span>
                       })}
                     </div>
+                    <button
+                      className="item-del"
+                      onClick={e => { e.stopPropagation(); removeItem(it.id) }}
+                      aria-label={`Delete ${it.name}`}
+                      title="Delete item"
+                    >
+                      ×
+                    </button>
                   </div>
 
                   {open && (

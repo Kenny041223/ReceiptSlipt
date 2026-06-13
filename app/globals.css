@@ -276,6 +276,10 @@ body {
 .chip { padding: 6px 13px; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--muted); transition: all .18s ease; }
 .chip.is-on { background: var(--primary); color: #fff; border-color: transparent; }
 
+/* delete button on split line items */
+.item-del { flex: none; width: 26px; height: 26px; border-radius: 50%; border: none; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; display: grid; place-items: center; transition: background .15s ease, color .15s ease; }
+.item-del:hover { background: rgba(255,99,99,.14); color: #f0563f; }
+
 /* ---------- Tappable card ---------- */
 .tap-card { cursor: pointer; transition: transform .22s ease, box-shadow .25s ease, background .25s ease; }
 .tap-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-glass-lg); background: var(--glass-bg-strong); }
