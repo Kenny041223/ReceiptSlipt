@@ -339,13 +339,21 @@ body {
 .split-card__icon { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; flex: none; background: var(--glass-bg-strong); border: 1px solid var(--glass-border); color: var(--primary); }
 .split-card__icon svg { width: 22px; height: 22px; }
 .split-card__main { flex: 1; min-width: 0; }
-.split-card__name { font-family: var(--font-display); font-weight: 600; font-size: 17px; }
+.split-card__name { font-family: var(--font-display); font-weight: 600; font-size: 17px; white-space: nowrap; }
 .split-card__meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
-.split-card__amt { text-align: right; }
-.split-card__amt b { font-family: var(--font-display); font-weight: 600; font-size: 20px; }
+.split-card__amt { text-align: right; flex: none; }
+.split-card__amt b { font-family: var(--font-display); font-weight: 600; font-size: 20px; white-space: nowrap; }
 .av-stack { display: flex; }
 .av-stack > * { margin-left: -10px; }
 .av-stack > *:first-child { margin-left: 0; }
+
+/* On narrow phones the avatar stack crowds the name/amount — hide it there */
+@media (max-width: 560px) {
+  .split-card { gap: 12px; padding: 14px 16px; }
+  .split-card .av-stack { display: none; }
+  .split-card__name { font-size: 15px; }
+  .split-card__amt b { font-size: 17px; }
+}
 
 /* ---------- Parser two-column ---------- */
 .parser-grid { display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start; }
@@ -410,8 +418,8 @@ input[type="range"].tip::-moz-range-thumb { width: 22px; height: 22px; border-ra
 .donut { width: 100%; height: 100%; transform: rotate(-90deg); }
 .donut__track { stroke: var(--faint); stroke-width: 15; }
 .donut circle { transition: stroke-dasharray .6s cubic-bezier(.22,.61,.36,1); }
-.donut__center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
-.donut__center .n { font-family: var(--font-display); font-weight: 600; font-size: 30px; line-height: 1; }
+.donut__center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; padding: 0 26px; }
+.donut__center .n { font-family: var(--font-display); font-weight: 600; font-size: clamp(16px, 5.2vw, 28px); line-height: 1.08; overflow-wrap: anywhere; }
 .donut__center .l { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 5px; }
 .budget-legend { display: flex; flex-direction: column; }
 .bl-row { display: flex; align-items: center; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--faint); }
