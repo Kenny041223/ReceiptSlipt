@@ -147,7 +147,7 @@ export default function SplitPage() {
                       <div className="item__sub">
                         {assignees.length
                           ? `Split ${assignees.length} way${assignees.length > 1 ? 's' : ''}`
-                          : 'Tap to assign · shared by everyone'}
+                          : 'Tap to assign'}
                       </div>
                     </div>
                     <div className="item__price tnum">RM {(it.price * it.quantity).toFixed(2)}</div>
