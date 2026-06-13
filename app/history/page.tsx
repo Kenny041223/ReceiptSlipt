@@ -84,7 +84,7 @@ export default function HistoryPage() {
                     ))}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span className="muted" style={{ fontSize: 12, fontWeight: 700 }}>View summary →</span>
+                    <span className="muted" style={{ fontSize: 12, fontWeight: 700 }}>View summary</span>
                     <button
                       className="item-del"
                       onClick={e => { e.stopPropagation(); deleteScan(scan.id) }}
