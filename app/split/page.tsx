@@ -139,11 +139,10 @@ export default function SplitPage() {
                   <div
                     className="item-head is-clickable"
                     onClick={() => setExpandedId(open ? '' : it.id)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px', minHeight: 64, cursor: 'pointer' }}
                   >
                     <div className="item__qty">{it.quantity}×</div>
                     <div className="item__main">
-                      <div className="item__name">{it.name}</div>
+                      <div className="item__name" title={it.name}>{it.name}</div>
                       <div className="item__sub">
                         {assignees.length
                           ? `Split ${assignees.length} way${assignees.length > 1 ? 's' : ''}`
