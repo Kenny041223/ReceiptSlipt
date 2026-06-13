@@ -13,10 +13,10 @@ const TIP_PRESETS = [0, 5, 10, 15]
 export default function SplitPage() {
   const router = useRouter()
   const { session, updateSession } = useReceiptSession()
-  const { friends } = useFriends()
+  const { friends, addFriend } = useFriends()
   const [people, setPeople] = useState<Person[]>([])
   const [items, setItems] = useState<ReceiptItem[]>([])
-  const [active, setActive] = useState<string>('')
+  const [expandedId, setExpandedId] = useState<string>('')
   const [taxRate, setTaxRate] = useState(0)
   const [tipPct, setTipPct] = useState(0)
   const [newName, setNewName] = useState('')
@@ -33,7 +33,6 @@ export default function SplitPage() {
     setTipPct(session.tipPct || 0)
     if (session.people.length > 0) {
       setPeople(session.people)
-      setActive(session.people[0].id)
     }
   }, [session])
 
@@ -43,9 +42,7 @@ export default function SplitPage() {
     if (friends.length === 0) return
     setPeople(prev => {
       if (prev.length > 0) return prev
-      const seeded = friends.map(f => ({ id: f.id, name: f.name }))
-      setActive(seeded[0].id)
-      return seeded
+      return friends.map(f => ({ id: f.id, name: f.name }))
     })
   }, [friends, session])
 
@@ -76,25 +73,28 @@ export default function SplitPage() {
   const addPerson = () => {
     const name = newName.trim()
     if (!name || people.some(p => p.name.toLowerCase() === name.toLowerCase())) return
-    const p = { id: Date.now().toString(), name }
-    setPeople([...people, p])
-    setActive(p.id)
+    setPeople([...people, { id: Date.now().toString(), name }])
     setNewName('')
+    // also save to the friends list so the name persists for next time
+    addFriend(name)
   }
 
   const removePerson = (id: string) => {
     setPeople(people.filter(p => p.id !== id))
     setItems(items.map(it => ({ ...it, assignedTo: it.assignedTo.filter(a => a !== id) })))
-    if (active === id) setActive(people[0]?.id ?? '')
   }
 
-  const toggleItem = (itemId: string) => {
-    if (!active) return
+  // toggle one person on/off an item — supports multiple people sharing an item
+  const togglePerson = (itemId: string, personId: string) => {
     setItems(items.map(it => {
       if (it.id !== itemId) return it
-      const has = it.assignedTo.includes(active)
-      return { ...it, assignedTo: has ? it.assignedTo.filter(a => a !== active) : [...it.assignedTo, active] }
+      const has = it.assignedTo.includes(personId)
+      return { ...it, assignedTo: has ? it.assignedTo.filter(a => a !== personId) : [...it.assignedTo, personId] }
     }))
+  }
+
+  const setItemEveryone = (itemId: string, all: boolean) => {
+    setItems(items.map(it => it.id === itemId ? { ...it, assignedTo: all ? people.map(p => p.id) : [] } : it))
   }
 
   const addItem = () => {
@@ -109,8 +109,6 @@ export default function SplitPage() {
     router.push('/summary')
   }
 
-  const activePerson = people.find(p => p.id === active)
-
   return (
     <div className="page">
       <div className="section-label">
@@ -123,35 +121,64 @@ export default function SplitPage() {
           <div className="section-label">
             <h2 className="display" style={{ fontSize: 20 }}>Line items</h2>
             <span className="muted" style={{ fontSize: 13, fontWeight: 700 }}>
-              {activePerson ? <>Tap an item to add it to <b className="coral">{activePerson.name}</b></> : 'Add someone first →'}
+              Tap an item to pick who shares it
             </span>
           </div>
 
           <div className="item-list">
             {items.map(it => {
               const assignees = it.assignedTo.filter(id => people.some(p => p.id === id))
-              const mine = active ? it.assignedTo.includes(active) : false
+              const open = expandedId === it.id
               return (
-                <div
-                  key={it.id}
-                  className={`item glass ${assignees.length ? 'has-assignee' : ''} ${active && !mine ? 'is-assignable' : ''} ${active ? 'is-clickable' : ''}`}
-                  onClick={() => toggleItem(it.id)}
-                >
-                  {active && <span className="item__hint">{mine ? 'Remove' : `+ ${activePerson?.name}`}</span>}
-                  <div className="item__qty">{it.quantity}×</div>
-                  <div className="item__main">
-                    <div className="item__name">{it.name}</div>
-                    <div className="item__sub">
-                      {assignees.length ? `Split ${assignees.length} way${assignees.length > 1 ? 's' : ''}` : 'Shared by everyone'}
+                <div key={it.id} className={`glass ${assignees.length ? 'has-assignee' : ''}`} style={{ borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+                  <div
+                    className="item-head is-clickable"
+                    onClick={() => setExpandedId(open ? '' : it.id)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 18px', minHeight: 64, cursor: 'pointer' }}
+                  >
+                    <div className="item__qty">{it.quantity}×</div>
+                    <div className="item__main">
+                      <div className="item__name">{it.name}</div>
+                      <div className="item__sub">
+                        {assignees.length
+                          ? `Split ${assignees.length} way${assignees.length > 1 ? 's' : ''}`
+                          : 'Tap to assign · shared by everyone'}
+                      </div>
+                    </div>
+                    <div className="item__price tnum">RM {(it.price * it.quantity).toFixed(2)}</div>
+                    <div className="item__assignees">
+                      {assignees.map(id => {
+                        const p = people.find(x => x.id === id)!
+                        return <span key={id} className="av av--xs" style={{ background: avatarGradient(p.name) }}>{initials(p.name)}</span>
+                      })}
                     </div>
                   </div>
-                  <div className="item__price tnum">RM {(it.price * it.quantity).toFixed(2)}</div>
-                  <div className="item__assignees">
-                    {assignees.map(id => {
-                      const p = people.find(x => x.id === id)!
-                      return <span key={id} className="av av--xs" style={{ background: avatarGradient(p.name) }}>{initials(p.name)}</span>
-                    })}
-                  </div>
+
+                  {open && (
+                    <div style={{ padding: '4px 18px 16px', borderTop: '1px solid var(--faint)' }}>
+                      <p className="eyebrow" style={{ fontSize: 11, margin: '12px 0 10px' }}>Who shares this?</p>
+                      {people.length === 0 ? (
+                        <p className="muted" style={{ fontSize: 13 }}>Add people in the panel on the right first.</p>
+                      ) : (
+                        <>
+                          <div className="chips">
+                            {people.map(p => {
+                              const on = it.assignedTo.includes(p.id)
+                              return (
+                                <button key={p.id} className={`chip ${on ? 'is-on' : ''}`} onClick={() => togglePerson(it.id, p.id)}>
+                                  {p.name}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          <div className="chips" style={{ marginTop: 8 }}>
+                            <button className="chip" onClick={() => setItemEveryone(it.id, true)}>Everyone</button>
+                            <button className="chip" onClick={() => setItemEveryone(it.id, false)}>Clear</button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}
@@ -201,8 +228,8 @@ export default function SplitPage() {
 
           <div className="roster__avatars">
             {people.map(p => (
-              <div key={p.id} className={`roster__person ${active === p.id ? 'is-active' : ''}`} onClick={() => setActive(p.id)}>
-                <button className="roster__remove" title={`Remove ${p.name}`} onClick={e => { e.stopPropagation(); removePerson(p.id) }}>×</button>
+              <div key={p.id} className="roster__person" style={{ cursor: 'default' }}>
+                <button className="roster__remove" title={`Remove ${p.name}`} onClick={() => removePerson(p.id)}>×</button>
                 <span className="av av--lg" style={{ background: avatarGradient(p.name) }}>{initials(p.name)}</span>
                 <span className="roster__name">{p.name}</span>
               </div>
@@ -228,7 +255,7 @@ export default function SplitPage() {
                   <button
                     key={f.id}
                     className="chip"
-                    onClick={() => { setPeople([...people, { id: f.id, name: f.name }]); setActive(f.id) }}
+                    onClick={() => setPeople([...people, { id: f.id, name: f.name }])}
                   >
                     + {f.name}
                   </button>
