@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { db } from '@/lib/firebase'
-import { collection, getDocs, orderBy, query, Timestamp } from 'firebase/firestore'
+import { collection, getDocs, orderBy, query, Timestamp, deleteDoc, doc } from 'firebase/firestore'
 import { avatarGradient, initials } from '@/lib/avatar'
+import { TrashIcon } from '@/components/Icons'
 
 interface ScanRecord {
   id: string
@@ -32,6 +33,17 @@ export default function HistoryPage() {
       .finally(() => setFetching(false))
   }, [user, loading])
 
+  const deleteScan = async (id: string) => {
+    if (!user) return
+    if (!window.confirm('Delete this split from your history?')) return
+    setScans(prev => prev.filter(s => s.id !== id)) // optimistic
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'scans', id))
+    } catch (e) {
+      console.error('Delete failed:', e)
+    }
+  }
+
   if (loading || fetching) {
     return (
       <div className="page" style={{ display: 'grid', placeItems: 'center', minHeight: '50vh' }}>
@@ -56,7 +68,7 @@ export default function HistoryPage() {
             const total = scan.results?.reduce((s, r) => s + (r.total || 0), 0) ?? 0
             const date = scan.createdAt?.toDate?.()
             return (
-              <a key={scan.id} href={`/history/${scan.id}`} className="glass tap-card" style={{ padding: 18, display: 'block', textDecoration: 'none', color: 'var(--text)' }}>
+              <div key={scan.id} className="glass tap-card" onClick={() => router.push(`/history/${scan.id}`)} style={{ padding: 18 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <span className="muted" style={{ fontSize: 13 }}>
                     {date ? date.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
@@ -71,9 +83,19 @@ export default function HistoryPage() {
                       </span>
                     ))}
                   </div>
-                  <span className="muted" style={{ fontSize: 12, fontWeight: 700 }}>View summary →</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span className="muted" style={{ fontSize: 12, fontWeight: 700 }}>View summary →</span>
+                    <button
+                      className="item-del"
+                      onClick={e => { e.stopPropagation(); deleteScan(scan.id) }}
+                      aria-label="Delete this split"
+                      title="Delete"
+                    >
+                      <TrashIcon style={{ width: 16, height: 16 }} />
+                    </button>
+                  </div>
                 </div>
-              </a>
+              </div>
             )
           })}
         </div>

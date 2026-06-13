@@ -13,10 +13,10 @@ service cloud.firestore {
       allow read: if request.auth != null && request.auth.uid == userId;
       allow write: if false;
 
-      // Saved split history: the user can read and create their own records.
+      // Saved split history: the user can read, create, and delete their own records.
       match /scans/{scanId} {
-        allow read, create: if request.auth != null && request.auth.uid == userId;
-        allow update, delete: if false;
+        allow read, create, delete: if request.auth != null && request.auth.uid == userId;
+        allow update: if false;
       }
 
       // Saved friends roster: the user manages their own list.

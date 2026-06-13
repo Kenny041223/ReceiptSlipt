@@ -51,6 +51,9 @@ export const HistoryIcon = (p: P) => (
 export const CopyIcon = (p: P) => (
   <svg {...base} {...p}><rect x="9" y="9" width="11" height="11" rx="2.5" /><path d="M5 15.5A2 2 0 0 1 3.5 13.6V5.5A2 2 0 0 1 5.5 3.5h8a2 2 0 0 1 2 2" /></svg>
 )
+export const TrashIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" /><path d="M10 11v6M14 11v6" /></svg>
+)
 export const BookmarkIcon = (p: P) => (
   <svg {...base} {...p}><path d="M6 3.5h12a1 1 0 0 1 1 1v16l-7-4-7 4v-16a1 1 0 0 1 1-1z" /><path d="M9.5 9h5" /></svg>
 )
