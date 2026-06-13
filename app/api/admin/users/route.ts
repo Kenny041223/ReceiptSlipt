@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyRequest, isAdminEmail } from '@/lib/apiAuth'
+import { verifyRequest, isAdminEmail, currentMonthKey } from '@/lib/apiAuth'
 import { adminDb } from '@/lib/firebaseAdmin'
 
 async function requireAdmin(req: NextRequest) {
@@ -15,13 +15,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Not authorized' }, { status: 403 })
   }
 
+  const month = currentMonthKey()
   const snap = await adminDb().collection('users').orderBy('createdAt', 'desc').get()
   const users = snap.docs.map(d => {
     const u = d.data()
+    // show this month's usage — if their stored period is an old month, it's effectively 0
+    const used = u.periodMonth === month ? (u.scanCount ?? 0) : 0
     return {
       uid: d.id,
       email: u.email ?? '(unknown)',
-      scanCount: u.scanCount ?? 0,
+      scanCount: used,
       scanLimit: u.scanLimit ?? 0,
     }
   })

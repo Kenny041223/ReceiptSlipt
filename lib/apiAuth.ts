@@ -7,7 +7,13 @@ export interface UserDoc {
   email: string | null
   scanCount: number
   scanLimit: number
+  periodMonth: string  // 'YYYY-MM' — the month the current scanCount belongs to
   createdAt: number
+}
+
+/** Current calendar month key, e.g. "2026-06". Used for monthly quota resets & usage logging. */
+export function currentMonthKey(d = new Date()): string {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
 }
 
 export function isAdminEmail(email?: string | null): boolean {
@@ -29,16 +35,22 @@ export async function verifyRequest(req: NextRequest): Promise<{ uid: string; em
   return { uid: decoded.uid, email: decoded.email ?? null }
 }
 
-/** Reads the user's Firestore doc, creating it with defaults on first use. */
+/**
+ * Reads the user's Firestore doc, creating it with defaults on first use.
+ * Also performs a lazy monthly reset: if the stored period is an earlier month,
+ * the scan count rolls back to 0 for the new month (no cron job needed).
+ */
 export async function getOrCreateUser(uid: string, email: string | null): Promise<UserDoc> {
   const ref = adminDb().collection('users').doc(uid)
   const snap = await ref.get()
+  const month = currentMonthKey()
 
   if (!snap.exists) {
     const data: UserDoc = {
       email,
       scanCount: 0,
       scanLimit: DEFAULT_SCAN_LIMIT,
+      periodMonth: month,
       createdAt: Date.now(),
     }
     await ref.set(data)
@@ -46,10 +58,18 @@ export async function getOrCreateUser(uid: string, email: string | null): Promis
   }
 
   const data = snap.data() as UserDoc
-  // Keep the stored email current (useful for the admin dashboard)
-  if (email && data.email !== email) {
-    await ref.update({ email })
-    data.email = email
+  const updates: Record<string, unknown> = {}
+
+  if (email && data.email !== email) { updates.email = email; data.email = email }
+
+  // Monthly reset — new month → fresh quota
+  if (data.periodMonth !== month) {
+    updates.scanCount = 0
+    updates.periodMonth = month
+    data.scanCount = 0
+    data.periodMonth = month
   }
+
+  if (Object.keys(updates).length) await ref.update(updates)
   return data
 }

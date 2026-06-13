@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { FieldValue } from 'firebase-admin/firestore'
-import { verifyRequest, getOrCreateUser, isAdminEmail } from '@/lib/apiAuth'
+import { verifyRequest, getOrCreateUser, isAdminEmail, currentMonthKey } from '@/lib/apiAuth'
 import { adminDb } from '@/lib/firebaseAdmin'
 
 const API_KEY = process.env.GOOGLE_VISION_API_KEY!
@@ -64,6 +64,14 @@ export async function POST(req: NextRequest) {
       await adminDb().collection('users').doc(uid).update({ scanCount: FieldValue.increment(1) })
       newCount = userData.scanCount + 1
     }
+
+    // 5. Log total usage for this month (every successful scan, incl. admins) —
+    //    this is what counts toward Google Cloud Vision's 1000/month free tier.
+    const month = currentMonthKey()
+    await adminDb().collection('usage').doc(month).set(
+      { month, count: FieldValue.increment(1) },
+      { merge: true }
+    )
 
     return NextResponse.json({
       rawText,
