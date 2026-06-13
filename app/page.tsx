@@ -38,29 +38,28 @@ export default function ScannerHomePage() {
         <div>
           <div
             className={`dropzone dropzone--scan ${dragging ? 'is-over' : ''}`}
-            onClick={() => fileRef.current?.click()}
+            style={{ cursor: 'default' }}
             onDragOver={e => { e.preventDefault(); setDragging(true) }}
             onDragLeave={() => setDragging(false)}
             onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
           >
             <div className="dropzone__inner">
               <div className="dropzone__circle"><CameraIcon /></div>
-              <div className="dropzone__title">Drag a receipt or click to snap</div>
-              <div className="dropzone__sub">Drop any photo here — we&apos;ll pull out every line item automatically.</div>
+              <div className="dropzone__title">Scan a receipt</div>
+              <div className="dropzone__sub">Snap a photo or upload one from your gallery — we&apos;ll pull out every line item.</div>
+              <div className="scan-actions" style={{ marginTop: 6 }}>
+                <button className="btn btn--primary btn--sm" onClick={() => cameraRef.current?.click()}>
+                  <CameraIcon /> Take photo
+                </button>
+                <button className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
+                  <UploadIcon /> Upload photo
+                </button>
+              </div>
             </div>
-            <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
-              onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
           </div>
 
-          {/* explicit take-photo (camera) — gives Android users a direct camera option */}
-          <div className="scan-actions" style={{ marginTop: 16 }}>
-            <button className="btn btn--primary btn--sm" onClick={() => cameraRef.current?.click()}>
-              <CameraIcon /> Take photo
-            </button>
-            <button className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
-              <UploadIcon /> Upload photo
-            </button>
-          </div>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
           <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
             onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
 
