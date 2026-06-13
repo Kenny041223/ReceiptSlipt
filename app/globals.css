@@ -9,6 +9,8 @@
    Tally — Soft Glass design system (adapted for Next.js app)
    ============================================================ */
 
+*, *::before, *::after { box-sizing: border-box; }
+
 :root {
   --font-display: 'Clash Display', sans-serif;
   --font-body: 'Satoshi', sans-serif;
@@ -107,7 +109,6 @@ body {
   z-index: 1;
   max-width: 1180px;
   margin: 0 auto;
-  width: 100%;
   padding: 36px 24px 140px;
 }
 .page--narrow { max-width: 640px; }
