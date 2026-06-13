@@ -4,7 +4,7 @@ import { useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
 import { compressImage } from '@/lib/compressImage'
-import { CameraIcon, ReceiptIcon } from '@/components/Icons'
+import { CameraIcon, ReceiptIcon, UploadIcon } from '@/components/Icons'
 
 export default function ScannerHomePage() {
   const router = useRouter()
@@ -12,6 +12,7 @@ export default function ScannerHomePage() {
   const [dragging, setDragging] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
+  const cameraRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -50,6 +51,19 @@ export default function ScannerHomePage() {
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
           </div>
+
+          {/* explicit take-photo (camera) — gives Android users a direct camera option */}
+          <div className="scan-actions" style={{ marginTop: 16 }}>
+            <button className="btn btn--primary btn--sm" onClick={() => cameraRef.current?.click()}>
+              <CameraIcon /> Take photo
+            </button>
+            <button className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
+              <UploadIcon /> Upload photo
+            </button>
+          </div>
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
+
           {error && <p className="auth-err" style={{ marginTop: 12 }}>{error}</p>}
         </div>
 
