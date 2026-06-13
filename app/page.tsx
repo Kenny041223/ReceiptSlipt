@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
-import { ArrowLeftIcon, CameraIcon, ReceiptIcon } from '@/components/Icons'
+import { CameraIcon, ReceiptIcon } from '@/components/Icons'
 
 export default function ScannerHomePage() {
   const router = useRouter()
@@ -27,16 +27,6 @@ export default function ScannerHomePage() {
   return (
     <div className="page">
       {/* screen top row: back to dashboard · title */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 30 }}>
-        <button className="back-btn" onClick={() => router.push('/dashboard')}>
-          <ArrowLeftIcon /> Dashboard
-        </button>
-        <div className="brand">
-          Scan a receipt
-        </div>
-        <div style={{ width: 100 }} />
-      </div>
-
       <div className="scan-grid">
         {/* dropzone */}
         <div>
