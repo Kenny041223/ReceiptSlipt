@@ -3,25 +3,30 @@
 import { useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
+import { compressImage } from '@/lib/compressImage'
 import { CameraIcon, ReceiptIcon } from '@/components/Icons'
 
 export default function ScannerHomePage() {
   const router = useRouter()
   const { resetSession } = useReceiptSession()
   const [dragging, setDragging] = useState(false)
+  const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const handleFile = useCallback((file: File) => {
+  const handleFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return
     resetSession()
-    const reader = new FileReader()
-    reader.onload = () => {
-      sessionStorage.setItem('pendingImageData', reader.result as string)
-      sessionStorage.setItem('pendingImageType', file.type)
-      sessionStorage.setItem('pendingImagePreview', URL.createObjectURL(file))
+    setError('')
+    try {
+      // Shrink big phone photos so they fit sessionStorage + the OCR upload limit
+      const dataUrl = await compressImage(file)
+      sessionStorage.setItem('pendingImageData', dataUrl)
+      sessionStorage.setItem('pendingImageType', 'image/jpeg')
+      sessionStorage.setItem('pendingImagePreview', dataUrl)
       router.push('/scan')
+    } catch {
+      setError('Could not process that image — please try another photo.')
     }
-    reader.readAsDataURL(file)
   }, [resetSession, router])
 
   return (
@@ -45,6 +50,7 @@ export default function ScannerHomePage() {
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
           </div>
+          {error && <p className="auth-err" style={{ marginTop: 12 }}>{error}</p>}
         </div>
 
         {/* extracted preview — awaiting state */}
