@@ -66,6 +66,9 @@ export const FlipIcon = (p: P) => (
 export const HomeIcon = (p: P) => (
   <svg {...base} {...p}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /><path d="M9.5 21v-6h5v6" /></svg>
 )
+export const GalleryIcon = (p: P) => (
+  <svg {...base} {...p}><rect x="3" y="4.5" width="18" height="15" rx="2.5" /><circle cx="8.5" cy="10" r="1.7" /><path d="M21 16l-4.5-4.5L6 20" /></svg>
+)
 export const UsersIcon = (p: P) => (
   <svg {...base} {...p}><circle cx="9" cy="8" r="3.4" /><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /><path d="M16 4.2a3.4 3.4 0 0 1 0 6.6M17.5 14.6c2 .8 3.5 2.7 3.5 5.4" /></svg>
 )

@@ -4,7 +4,7 @@ import { useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
 import { compressImage } from '@/lib/compressImage'
-import { CameraIcon, ReceiptIcon, UploadIcon } from '@/components/Icons'
+import { CameraIcon, GalleryIcon, ReceiptIcon } from '@/components/Icons'
 
 export default function ScannerHomePage() {
   const router = useRouter()
@@ -35,12 +35,13 @@ export default function ScannerHomePage() {
       <div className="scan-grid">
         {/* upload actions */}
         <div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <button className="btn btn--primary btn--block" onClick={() => cameraRef.current?.click()}>
-              <CameraIcon /> Take photo
+          <div className="seg">
+            <button className="seg__btn" onClick={() => cameraRef.current?.click()}>
+              <CameraIcon /> Camera
             </button>
-            <button className="btn btn--ghost btn--block" onClick={() => fileRef.current?.click()}>
-              <UploadIcon /> Upload photo
+            <span className="seg__divider" />
+            <button className="seg__btn" onClick={() => fileRef.current?.click()}>
+              <GalleryIcon /> Gallery
             </button>
           </div>
 
