@@ -491,7 +491,7 @@ input[type="range"].tip::-moz-range-thumb { width: 22px; height: 22px; border-ra
 .seg__btn:hover { background: var(--glass-hover); }
 .seg__btn:active { background: var(--primary-soft); }
 .seg__btn svg { width: 22px; height: 22px; }
-.seg__divider { width: 1px; background: var(--glass-border); margin: 12px 0; flex: none; }
+.seg__divider { width: 1px; background: rgba(26, 27, 75, 0.14); margin: 12px 0; flex: none; }
 
 /* ---------- Scanner two-column ---------- */
 .scan-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, .85fr); gap: 24px; align-items: start; }
