@@ -308,7 +308,9 @@ body {
 .person-card__name { font-family: var(--font-display); font-weight: 600; font-size: 19px; }
 .person-card__role { font-size: 12px; color: var(--muted); }
 .person-card__items { display: flex; flex-direction: column; gap: 8px; }
-.person-card__item { display: flex; justify-content: space-between; font-size: 14px; }
+.person-card__item { display: flex; justify-content: space-between; gap: 14px; font-size: 14px; }
+.person-card__item span:first-child { min-width: 0; }
+.person-card__item span:last-child { white-space: nowrap; flex: none; }
 .person-card__total { display: flex; align-items: baseline; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--faint); }
 .person-card__total b { font-family: var(--font-display); font-weight: 600; font-size: 26px; }
 

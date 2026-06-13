@@ -6,7 +6,7 @@ import { useReceiptSession } from '@/hooks/useReceiptSession'
 import { useAuth } from '@/components/AuthProvider'
 import { SplitResult } from '@/types'
 import SplitSummary from '@/components/SplitSummary'
-import { BookmarkIcon } from '@/components/Icons'
+import { BookmarkIcon, CopyIcon } from '@/components/Icons'
 import { db } from '@/lib/firebase'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
@@ -104,9 +104,10 @@ export default function SummaryPage() {
         <div className="sum-banner__sub">Split across {results.length} {results.length === 1 ? 'person' : 'people'}</div>
       </div>
 
-      <SplitSummary results={results} paid={paid} onTogglePaid={togglePaid} onCopy={copyLink} />
+      <SplitSummary results={results} paid={paid} onTogglePaid={togglePaid} />
 
       <div style={{ marginTop: 28, display: 'grid', gap: 12, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto' }}>
+        <button onClick={copyLink} className="btn btn--ghost btn--block"><CopyIcon /> Copy split</button>
         {user && !saved && (
           <button onClick={saveToHistory} disabled={saving} className="btn btn--ghost btn--block">
             <BookmarkIcon /> {saving ? 'Saving…' : 'Save to History'}

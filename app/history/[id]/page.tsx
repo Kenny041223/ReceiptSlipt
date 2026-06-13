@@ -7,7 +7,7 @@ import { db } from '@/lib/firebase'
 import { doc, getDoc, Timestamp } from 'firebase/firestore'
 import SplitSummary from '@/components/SplitSummary'
 import { SplitResult } from '@/types'
-import { ArrowLeftIcon } from '@/components/Icons'
+import { ArrowLeftIcon, CopyIcon } from '@/components/Icons'
 
 export default function HistoryDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -72,7 +72,11 @@ export default function HistoryDetailPage() {
         </div>
       </div>
 
-      <SplitSummary results={results} paid={paid} onTogglePaid={togglePaid} onCopy={copyLink} />
+      <SplitSummary results={results} paid={paid} onTogglePaid={togglePaid} />
+
+      <div style={{ marginTop: 24, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto' }}>
+        <button onClick={copyLink} className="btn btn--ghost btn--block"><CopyIcon /> Copy split</button>
+      </div>
 
       {toast && <div className="toast">✓ {toast}</div>}
     </div>
