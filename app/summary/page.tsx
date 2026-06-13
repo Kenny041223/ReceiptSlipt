@@ -6,6 +6,7 @@ import { useReceiptSession } from '@/hooks/useReceiptSession'
 import { useAuth } from '@/components/AuthProvider'
 import { SplitResult } from '@/types'
 import SplitSummary from '@/components/SplitSummary'
+import { BookmarkIcon } from '@/components/Icons'
 import { db } from '@/lib/firebase'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
@@ -108,7 +109,7 @@ export default function SummaryPage() {
       <div style={{ marginTop: 28, display: 'grid', gap: 12, maxWidth: 440, marginLeft: 'auto', marginRight: 'auto' }}>
         {user && !saved && (
           <button onClick={saveToHistory} disabled={saving} className="btn btn--ghost btn--block">
-            {saving ? 'Saving…' : '💾 Save to History'}
+            <BookmarkIcon /> {saving ? 'Saving…' : 'Save to History'}
           </button>
         )}
         {saved && <p className="green" style={{ textAlign: 'center', fontWeight: 700, fontSize: 14 }}>Saved to your history ✓</p>}

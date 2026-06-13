@@ -56,21 +56,24 @@ export default function HistoryPage() {
             const total = scan.results?.reduce((s, r) => s + (r.total || 0), 0) ?? 0
             const date = scan.createdAt?.toDate?.()
             return (
-              <div key={scan.id} className="glass" style={{ padding: 18 }}>
+              <a key={scan.id} href={`/history/${scan.id}`} className="glass tap-card" style={{ padding: 18, display: 'block', textDecoration: 'none', color: 'var(--text)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                   <span className="muted" style={{ fontSize: 13 }}>
                     {date ? date.toLocaleDateString('en-MY', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
                   </span>
                   <b className="coral tnum" style={{ fontFamily: 'var(--font-display)' }}>RM {total.toFixed(2)}</b>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center' }} className="item__assignees">
-                  {scan.people?.map(p => (
-                    <span key={p.id} className="av av--sm" style={{ background: avatarGradient(p.name) }} title={p.name}>
-                      {initials(p.name)}
-                    </span>
-                  ))}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center' }} className="item__assignees">
+                    {scan.people?.map(p => (
+                      <span key={p.id} className="av av--sm" style={{ background: avatarGradient(p.name) }} title={p.name}>
+                        {initials(p.name)}
+                      </span>
+                    ))}
+                  </div>
+                  <span className="muted" style={{ fontSize: 12, fontWeight: 700 }}>View summary →</span>
                 </div>
-              </div>
+              </a>
             )
           })}
         </div>
