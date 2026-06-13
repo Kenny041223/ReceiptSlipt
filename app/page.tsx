@@ -9,7 +9,6 @@ import { CameraIcon, ReceiptIcon, UploadIcon } from '@/components/Icons'
 export default function ScannerHomePage() {
   const router = useRouter()
   const { resetSession } = useReceiptSession()
-  const [dragging, setDragging] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef<HTMLInputElement>(null)
   const cameraRef = useRef<HTMLInputElement>(null)
@@ -34,28 +33,15 @@ export default function ScannerHomePage() {
     <div className="page">
       {/* screen top row: back to dashboard · title */}
       <div className="scan-grid">
-        {/* dropzone */}
+        {/* upload actions */}
         <div>
-          <div
-            className={`dropzone dropzone--scan ${dragging ? 'is-over' : ''}`}
-            style={{ cursor: 'default' }}
-            onDragOver={e => { e.preventDefault(); setDragging(true) }}
-            onDragLeave={() => setDragging(false)}
-            onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFile(f) }}
-          >
-            <div className="dropzone__inner">
-              <div className="dropzone__circle"><CameraIcon /></div>
-              <div className="dropzone__title">Scan a receipt</div>
-              <div className="dropzone__sub">Snap a photo or upload one from your gallery — we&apos;ll pull out every line item.</div>
-              <div className="scan-actions" style={{ marginTop: 6 }}>
-                <button className="btn btn--primary btn--sm" onClick={() => cameraRef.current?.click()}>
-                  <CameraIcon /> Take photo
-                </button>
-                <button className="btn btn--ghost btn--sm" onClick={() => fileRef.current?.click()}>
-                  <UploadIcon /> Upload photo
-                </button>
-              </div>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <button className="btn btn--primary btn--block" onClick={() => cameraRef.current?.click()}>
+              <CameraIcon /> Take photo
+            </button>
+            <button className="btn btn--ghost btn--block" onClick={() => fileRef.current?.click()}>
+              <UploadIcon /> Upload photo
+            </button>
           </div>
 
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
