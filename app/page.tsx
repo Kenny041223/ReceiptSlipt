@@ -3,14 +3,13 @@
 import { useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
-import { ArrowLeftIcon, CameraIcon, FlipIcon, ReceiptIcon, UploadIcon } from '@/components/Icons'
+import { ArrowLeftIcon, CameraIcon } from '@/components/Icons'
 
 export default function ScannerHomePage() {
   const router = useRouter()
   const { resetSession } = useReceiptSession()
   const [dragging, setDragging] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-  const camRef = useRef<HTMLInputElement>(null)
 
   const handleFile = useCallback((file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -35,7 +34,7 @@ export default function ScannerHomePage() {
         <div className="brand">
           Scan a receipt
         </div>
-        <div style={{ width: 120 }} />
+        <div style={{ width: 100 }} />
       </div>
 
       <div className="scan-grid">
@@ -55,13 +54,6 @@ export default function ScannerHomePage() {
             </div>
             <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }}
               onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
-            <input ref={camRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }}
-              onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); e.target.value = '' }} />
-          </div>
-
-          <div className="scan-actions">
-            <button className="btn btn--sm btn--ghost" onClick={() => fileRef.current?.click()}><UploadIcon /> Upload file</button>
-            <button className="btn btn--sm btn--ghost" onClick={() => camRef.current?.click()}><FlipIcon /> Switch camera</button>
           </div>
         </div>
 
