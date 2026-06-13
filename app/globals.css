@@ -431,6 +431,15 @@ input[type="range"].tip::-moz-range-thumb { width: 22px; height: 22px; border-ra
 .bl-bar { width: 120px; height: 8px; border-radius: 999px; background: var(--faint); overflow: hidden; flex: none; }
 .bl-bar > span { display: block; height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.22,.61,.36,1); }
 .bl-amt { width: 92px; text-align: right; flex: none; white-space: nowrap; }
+
+/* On phones the progress bar crowds the name/amount → drop it so the figure fits */
+@media (max-width: 560px) {
+  .budget-card { padding: 20px 16px; }
+  .bl-row { gap: 10px; }
+  .bl-bar { display: none; }
+  .bl-name { font-size: 14px; }
+  .bl-amt { width: auto; }
+}
 .bl-amt b { font-family: var(--font-display); font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; }
 
 /* ---------- Scanner two-column ---------- */
