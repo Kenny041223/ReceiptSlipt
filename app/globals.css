@@ -481,7 +481,7 @@ input[type="range"].tip::-moz-range-thumb { width: 22px; height: 22px; border-ra
 }
 
 /* ---------- Auth / login screen ---------- */
-.auth { min-height: 100vh; display: grid; place-content: center; justify-items: center; gap: 18px; padding: 48px 24px; }
+.auth { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 48px 20px; }
 .auth-card { width: 440px; max-width: 100%; padding: 40px; border-radius: var(--radius-card); background: var(--glass-bg-strong); border: 1px solid var(--glass-border); box-shadow: var(--shadow-glass-lg); -webkit-backdrop-filter: blur(var(--blur)) saturate(150%); backdrop-filter: blur(var(--blur)) saturate(150%); display: flex; flex-direction: column; gap: 20px; animation: authIn .5s cubic-bezier(.22,.61,.36,1); }
 @keyframes authIn { from { transform: translateY(16px) scale(.985); } to { transform: none; } }
 .auth-brand { display: flex; align-items: center; gap: 11px; }
