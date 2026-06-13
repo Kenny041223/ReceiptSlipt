@@ -154,8 +154,8 @@ export default function AdminPage() {
             <div key={u.uid} className="glass" style={{ padding: 18 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                  <span className="av av--sm" style={{ background: avatarGradient(u.email) }}>{initials(u.email)}</span>
-                  <span style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u.email}</span>
+                  <span className="av av--sm" style={{ background: avatarGradient(u.email), flex: 'none' }}>{initials(u.email)}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{u.email}</span>
                 </div>
                 <span className={`scan-pill ${atLimit ? 'is-out' : ''}`} style={{ flexShrink: 0 }}>
                   {u.scanCount} / {u.scanLimit} used
