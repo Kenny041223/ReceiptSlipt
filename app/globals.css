@@ -175,11 +175,17 @@ body {
 .brand__mark { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--primary); color: #fff; }
 .brand__mark svg { width: 18px; height: 18px; }
 .topbar__nav { display: flex; align-items: center; gap: 14px; font-size: 14px; }
-.topbar__link { color: var(--muted); text-decoration: none; font-weight: 700; transition: color .2s ease; }
+.topbar__link { color: var(--muted); text-decoration: none; font-weight: 700; white-space: nowrap; transition: color .2s ease; }
 .topbar__link:hover { color: var(--text); }
 .topbar__link.is-active { color: var(--primary); }
-.scan-pill { font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--muted); }
+.scan-pill { font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--muted); display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
 .scan-pill.is-out { background: var(--primary-soft); color: var(--primary); }
+
+@media (max-width: 560px) {
+  .topbar { padding: 12px 14px; }
+  .topbar__nav { gap: 11px; font-size: 13px; }
+  .brand__text { display: none; }  /* mark-only logo on phones to free up the row */
+}
 
 /* ---------- Floating dock ---------- */
 .dock-wrap { position: fixed; bottom: 26px; left: 0; right: 0; display: flex; justify-content: center; z-index: 60; pointer-events: none; }
@@ -217,7 +223,9 @@ body {
 @media (prefers-reduced-motion: reduce) { .break-receipt .brk { animation: none !important; } }
 
 /* ---------- Section labels ---------- */
-.section-label { display: flex; align-items: center; justify-content: space-between; margin: 0 0 14px; }
+.section-label { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 14px; }
+.section-label > :first-child { min-width: 0; }
+.section-label .scan-pill { flex: none; }
 
 /* ---------- Dropzone (home) ---------- */
 .dropzone {

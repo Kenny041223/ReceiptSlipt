@@ -21,7 +21,7 @@ export default function Header() {
     <header className="topbar">
       <Link href="/" className="brand">
         <span className="brand__mark"><ReceiptIcon /></span>
-        Receipt Splitter
+        <span className="brand__text">Receipt Splitter</span>
       </Link>
 
       <nav className="topbar__nav">
@@ -41,7 +41,7 @@ export default function Header() {
               History
             </Link>
             <button onClick={() => signOut(auth)} className="topbar__link" style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-              Sign out
+              Logout
             </button>
             <span
               className="av av--sm"
