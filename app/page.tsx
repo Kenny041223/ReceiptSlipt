@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
-import { ArrowLeftIcon, CameraIcon } from '@/components/Icons'
+import { ArrowLeftIcon, CameraIcon, ReceiptIcon } from '@/components/Icons'
 
 export default function ScannerHomePage() {
   const router = useRouter()
