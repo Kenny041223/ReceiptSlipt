@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from './AuthProvider'
-import { BreakReceipt, ProfileIcon, UsersIcon } from './Icons'
+import { BreakReceipt, HomeIcon, UsersIcon } from './Icons'
 
 export default function Dock() {
   const router = useRouter()
@@ -30,7 +30,7 @@ export default function Dock() {
           onClick={() => router.push('/dashboard')}
           aria-label="Dashboard"
         >
-          <ProfileIcon />
+          <HomeIcon />
         </button>
       </div>
     </div>

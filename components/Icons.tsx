@@ -57,6 +57,9 @@ export const EditIcon = (p: P) => (
 export const FlipIcon = (p: P) => (
   <svg {...base} {...p}><path d="M4 9a8 8 0 0 1 13-3l2 2M20 15a8 8 0 0 1-13 3l-2-2" /><path d="M19 4v4h-4M5 20v-4h4" /></svg>
 )
+export const HomeIcon = (p: P) => (
+  <svg {...base} {...p}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /><path d="M9.5 21v-6h5v6" /></svg>
+)
 export const UsersIcon = (p: P) => (
   <svg {...base} {...p}><circle cx="9" cy="8" r="3.4" /><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5" /><path d="M16 4.2a3.4 3.4 0 0 1 0 6.6M17.5 14.6c2 .8 3.5 2.7 3.5 5.4" /></svg>
 )
