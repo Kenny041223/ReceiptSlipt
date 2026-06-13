@@ -152,8 +152,8 @@ export default function AdminPage() {
           const atLimit = u.scanCount >= u.scanLimit
           return (
             <div key={u.uid} className="glass" style={{ padding: 18 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: '1 1 200px' }}>
                   <span className="av av--sm" style={{ background: avatarGradient(u.email), flex: 'none' }}>{initials(u.email)}</span>
                   <span style={{ fontWeight: 700, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{u.email}</span>
                 </div>
