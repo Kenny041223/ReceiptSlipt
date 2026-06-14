@@ -54,11 +54,8 @@ export default function ScanPage() {
         }
         if (!res.ok) throw new Error(data.error || 'OCR failed')
 
-        // Prefer Claude's structured items; fall back to the regex parser if absent.
-        const parsed = (Array.isArray(data.items) && data.items.length > 0)
-          ? data.items
-          : parseReceiptText(data.rawText || '')
-        const receiptItems: ReceiptItem[] = parsed.map((p: { id: string; name: string; price: number; quantity: number }) => ({ ...p, assignedTo: [] }))
+        const parsed = parseReceiptText(data.rawText)
+        const receiptItems: ReceiptItem[] = parsed.map(p => ({ ...p, assignedTo: [] }))
         setItems(receiptItems)
         updateSession({ items: receiptItems, rawText: data.rawText })
         refreshProfile()

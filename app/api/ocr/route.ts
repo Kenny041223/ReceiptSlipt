@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { FieldValue } from 'firebase-admin/firestore'
 import { verifyRequest, getOrCreateUser, isAdminEmail, currentMonthKey } from '@/lib/apiAuth'
 import { adminDb } from '@/lib/firebaseAdmin'
-import { parseReceiptWithClaude } from '@/lib/receiptAI'
-import { ParsedItem } from '@/lib/receiptParser'
 
 const API_KEY = process.env.GOOGLE_VISION_API_KEY!
 const ENDPOINT = `https://vision.googleapis.com/v1/images:annotate?key=${API_KEY}`
@@ -60,15 +58,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No text found in image' }, { status: 422 })
     }
 
-    // 3b. Parse the OCR text into structured line items with Claude.
-    //     On any failure, fall back to null so the client uses the regex parser.
-    let items: ParsedItem[] | null = null
-    try {
-      items = await parseReceiptWithClaude(rawText)
-    } catch (e) {
-      console.error('Claude receipt parse failed, falling back to regex:', e)
-    }
-
     // 4. Count the scan (only successful scans, and not for admins)
     let newCount = userData.scanCount
     if (!admin) {
@@ -86,7 +75,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       rawText,
-      items,
       scanCount: newCount,
       scanLimit: userData.scanLimit,
       remaining: admin ? null : Math.max(0, userData.scanLimit - newCount),
