@@ -5,89 +5,106 @@ export interface ParsedItem {
   quantity: number
 }
 
-// Lines that indicate totals/headers, not food items
+// Lines that are headers / totals / footer noise, never food items
 const SKIP_PATTERNS = [
   /subtotal|sub.total/i,
+  /\btotal\b/i,
+  /\btender\b/i,
+  /\bcash\b/i,
+  /\bchange\b/i,
   /service|srv\s*chg/i,
   /\bgst\b|\bsst\b/i,
   /\btax\b/i,
+  /\brounding\b/i,
   /amt\s*du|amount\s*due/i,
+  /\bpoints?\b/i,
+  /saving/i,
+  /\bmemb\b/i,
+  /balance/i,
+  /expiry/i,
+  /customer\s*service/i,
+  /\btel\b|\bfax\b/i,
   /thank\s*you/i,
+  /invoice/i,
+  /https?:|www\.|\.com/i,
+  /download/i,
+  /qr\s*code/i,
+  /\bcard\b/i,
   /stored/i,
-  /^---/,
+  /^-{2,}$/,
   /cover:|check:|print\s*cnt|tbl:|table:/i,
   /gst\s*id/i,
-  /^\d{5}\s+/,   // postal codes like "50088 Kuala Lumpur"
-  /^[TtMmFf]\s*[\d+]/,  // phone lines like "T 03..." or "M+60..."
+  /^\d{5}\s+[A-Za-z]/, // postal lines "50088 Kuala Lumpur"
 ]
+const isSkip = (l: string) => SKIP_PATTERNS.some(r => r.test(l))
 
-const shouldSkip = (line: string) => SKIP_PATTERNS.some(r => r.test(line))
+// Detail line with unit×qty and a line total, e.g. "220029...309  14.59*1  14.59 S"
+// Captures: [1]=unit price, [2]=qty, [3]=LINE TOTAL (the number we actually want)
+const DETAIL_RE = /(\d{1,4}(?:\.\d{2}))\s*[*xX]\s*(\d+)\s+(\d{1,5}(?:\.\d{2}))\s*[A-Za-z]{0,2}\s*$/
 
-// Matches a standalone price line: "414.00 S", "13,888.00", "2,760.00 S"
-const PRICE_RE = /^([\d,]+\.\d{2})\s*[S]?\s*$/
+// A line that is ONLY a price (price sits on its own line below the item name)
+const PRICE_ONLY_RE = /^(?:RM\s*)?([\d,]{1,8}(?:\.\d{2}))\s*[A-Za-z]{0,2}\s*$/
 
-const isPriceLine = (line: string) => PRICE_RE.test(line)
+// Item name and price on the SAME line, e.g. "Nasi Lemak  8.50"
+const SAME_LINE_RE = /^(.*[A-Za-z].*?)\s+(?:RM\s*)?(\d{1,5}(?:\.\d{2}))\s*[A-Za-z]{0,2}\s*$/
 
-// Matches a standalone quantity: "1", "3", "12"
-const isQtyOnly = (line: string) => /^\d{1,3}$/.test(line)
+const hasLetters = (l: string) => /[A-Za-z]/.test(l)
+
+function cleanName(n: string): string {
+  return n
+    .replace(/^\d{1,3}\s*[xX]\s+/, '')   // leading "2x "
+    .replace(/^\d{1,3}[.)]\s+/, '')      // leading "1. " / "3) "
+    .replace(/^[-•*]\s*/, '')            // leading bullet
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
 
 export function parseReceiptText(rawText: string): ParsedItem[] {
   const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean)
   const items: ParsedItem[] = []
   let counter = 0
+  let pendingName = '' // most recent line that looks like an item name
 
-  for (let i = 0; i < lines.length; i++) {
-    if (!isPriceLine(lines[i])) continue
+  const push = (rawNameSource: string, qty: number, total: number) => {
+    const name = cleanName(rawNameSource)
+    if (name.length < 2 || /^\d+$/.test(name)) return
+    if (!(total > 0) || total > 100000) return
+    const q = Math.max(1, qty)
+    const unit = Math.round((total / q) * 100) / 100
+    items.push({ id: String(++counter), name, price: unit, quantity: q })
+  }
 
-    // Parse the line total (e.g. "13,888.00 S" → 13888)
-    const totalPrice = parseFloat(lines[i].replace(/,/g, '').replace(/\s*S\s*$/, ''))
-    if (totalPrice <= 0 || totalPrice > 100000) continue
+  for (const line of lines) {
+    if (isSkip(line)) { pendingName = ''; continue }
 
-    let name = ''
-    let qty = 1
+    let m: RegExpMatchArray | null
 
-    // Scan backwards from this price line to find the item name and quantity
-    for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
-      const prev = lines[j]
-
-      // Stop if we hit another price line (entered the previous item's territory)
-      if (isPriceLine(prev)) break
-      // Stop if we hit a header/total keyword
-      if (shouldSkip(prev)) break
-
-      // Pure quantity line (e.g., "3")
-      if (isQtyOnly(prev)) {
-        qty = parseInt(prev)
-        if (name) break  // Have both — done
-        continue
-      }
-
-      // Name candidate line (only take the first/closest one)
-      if (!name) {
-        let candidate = prev
-        // Strip trailing unit price: "@18.00", "138.00", "3,888."
-        candidate = candidate.replace(/\s+@?[\d,]+\.?\d{0,2}\s*$/, '').trim()
-        // Strip leading qty prefix: "3 Steak Fries" → qty=3, name="Steak Fries"
-        // or "1. Chateau Margaux" → qty=1, name="Chateau Margaux"
-        const qtyPrefix = candidate.match(/^(\d{1,3})[.)\s]\s*(.+)$/)
-        if (qtyPrefix) {
-          qty = parseInt(qtyPrefix[1])
-          candidate = qtyPrefix[2].trim()
-        }
-
-        if (candidate.length >= 2 && !/^\d+$/.test(candidate)) {
-          name = candidate
-          // Don't break — keep scanning back in case qty is on its own line before
-        }
-      }
+    // 1) "<barcode> <unit>*<qty> <total> S"  → use the LINE TOTAL, name is the line above
+    if ((m = line.match(DETAIL_RE))) {
+      push(pendingName, parseInt(m[2]), parseFloat(m[3]))
+      pendingName = ''
+      continue
     }
 
-    if (name.length >= 2) {
-      // Store unit price so that price × qty = line total
-      const unitPrice = qty > 1
-        ? Math.round((totalPrice / qty) * 100) / 100
-        : totalPrice
-      items.push({ id: String(++counter), name, price: unitPrice, quantity: qty })
+    // 2) price alone on its line → belongs to the name we saw just before
+    if ((m = line.match(PRICE_ONLY_RE))) {
+      if (pendingName) {
+        push(pendingName, 1, parseFloat(m[1].replace(/,/g, '')))
+        pendingName = ''
+      }
+      continue
+    }
+
+    // 3) "Name ..... price" on one line
+    if ((m = line.match(SAME_LINE_RE))) {
+      push(m[1], 1, parseFloat(m[2].replace(/,/g, '')))
+      pendingName = ''
+      continue
+    }
+
+    // 4) otherwise, if it reads like a name, remember it for the next price/detail line
+    if (hasLetters(line) && !/^\d+$/.test(line)) {
+      pendingName = line
     }
   }
 
