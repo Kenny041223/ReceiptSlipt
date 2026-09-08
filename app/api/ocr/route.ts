@@ -4,10 +4,17 @@ import { verifyRequest, getOrCreateUser, isAdminEmail, currentMonthKey } from '@
 import { adminDb } from '@/lib/firebaseAdmin'
 
 const HF_TOKEN = process.env.HF_TOKEN
-// A vision-language model is used rather than a line-only OCR model so it can
-// preserve the full receipt layout before receiptParser turns it into items.
-const HF_MODEL = process.env.HUGGINGFACE_OCR_MODEL || 'Qwen/Qwen2.5-VL-3B-Instruct'
+// A vision-language model extracts structured receipt items directly. This is
+// more reliable than treating product codes, totals, and payment lines as OCR text.
+const HF_MODEL = process.env.HUGGINGFACE_OCR_MODEL || 'Qwen/Qwen2.5-VL-7B-Instruct'
 const HF_ENDPOINT = 'https://router.huggingface.co/v1/chat/completions'
+
+interface ReceiptItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+}
 
 function getMessageText(content: unknown): string {
   if (typeof content === 'string') return content.trim()
@@ -30,6 +37,68 @@ function getHuggingFaceError(data: unknown): string {
   return 'The Hugging Face model could not process this image.'
 }
 
+function parseJsonObject(text: string): Record<string, unknown> | null {
+  const candidates = [
+    text,
+    text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, ''),
+  ]
+  const firstBrace = text.indexOf('{')
+  const lastBrace = text.lastIndexOf('}')
+  if (firstBrace >= 0 && lastBrace > firstBrace) candidates.push(text.slice(firstBrace, lastBrace + 1))
+
+  for (const candidate of candidates) {
+    try {
+      const value: unknown = JSON.parse(candidate)
+      if (typeof value === 'object' && value && !Array.isArray(value)) return value as Record<string, unknown>
+    } catch {
+      // Try the next form: some providers wrap JSON in a markdown fence.
+    }
+  }
+  return null
+}
+
+function toPositiveNumber(value: unknown): number | null {
+  const number = typeof value === 'number'
+    ? value
+    : typeof value === 'string'
+      ? Number(value.replace(/RM|,|\s/g, ''))
+      : NaN
+  return Number.isFinite(number) && number > 0 && number <= 100_000 ? number : null
+}
+
+function roundMoney(value: number): number {
+  return Math.round((value + Number.EPSILON) * 100) / 100
+}
+
+function extractItems(modelText: string): { items: ReceiptItem[]; receiptTotal: number | null } | null {
+  const receipt = parseJsonObject(modelText)
+  if (!receipt || !Array.isArray(receipt.items)) return null
+
+  const items = receipt.items.flatMap((item, index) => {
+    if (typeof item !== 'object' || !item || Array.isArray(item)) return []
+    const source = item as Record<string, unknown>
+    const name = typeof source.name === 'string' ? source.name.replace(/\s+/g, ' ').trim() : ''
+    const quantity = toPositiveNumber(source.quantity) ?? 1
+    const lineTotal = toPositiveNumber(source.lineTotal)
+    const unitPrice = toPositiveNumber(source.unitPrice)
+
+    // Product names must contain a letter; prices and quantities are bounded to
+    // prevent malformed model output from entering a user's bill.
+    if (!/[a-z]/i.test(name) || name.length > 120 || quantity > 10_000) return []
+    if (!lineTotal && !unitPrice) return []
+
+    const price = roundMoney(lineTotal ? lineTotal / quantity : unitPrice!)
+    return [{
+      id: String(index + 1),
+      name,
+      price,
+      quantity: Math.round(quantity * 1_000) / 1_000,
+    }]
+  })
+
+  return { items, receiptTotal: toPositiveNumber(receipt.receiptTotal) }
+}
+
 export async function POST(req: NextRequest) {
   // 1. Authenticate the user
   let uid: string
@@ -50,7 +119,7 @@ export async function POST(req: NextRequest) {
     )
   }
 
-  // 3. Run OCR
+  // 3. Extract structured receipt items with the vision-language model.
   try {
     const form = await req.formData()
     const image = form.get('image') as File | null
@@ -79,7 +148,16 @@ export async function POST(req: NextRequest) {
           content: [
             {
               type: 'text',
-              text: 'Transcribe every visible receipt line exactly. Preserve line breaks. Return only the receipt text: no markdown, labels, explanation, or commentary.',
+              text: `Extract only the purchasable line items from this retail receipt. Return exactly one valid JSON object and no markdown or commentary:
+{"items":[{"name":"string","quantity":number,"unitPrice":number,"lineTotal":number}],"receiptTotal":number|null}
+
+Rules:
+- Include a line only when its product name and a positive printed price are legible.
+- Use the printed line total for lineTotal. If quantity is greater than 1, unitPrice must equal lineTotal divided by quantity.
+- Ignore product codes, barcodes, store header/address, membership offers, coupons, discounts, tax, subtotal, total, tender, cash/card/payment, change, QR codes, URLs, and all footer text.
+- "Tender" and payment amounts are never items and never receiptTotal. receiptTotal is only the printed grand total; use null if it is unclear.
+- Do not guess, repair, or invent unreadable names, quantities, or prices. Omit uncertain lines instead.
+- Every price must be a JSON number in RM, not a string.`,
             },
             {
               type: 'image_url',
@@ -97,10 +175,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Hugging Face error: ${getHuggingFaceError(data)}` }, { status: 502 })
     }
 
-    const rawText = getMessageText(data?.choices?.[0]?.message?.content)
+    const modelText = getMessageText(data?.choices?.[0]?.message?.content)
 
-    if (!rawText) {
-      return NextResponse.json({ error: 'No text found in image' }, { status: 422 })
+    if (!modelText) {
+      return NextResponse.json({ error: 'No receipt data found in image' }, { status: 422 })
+    }
+
+    const extracted = extractItems(modelText)
+    if (!extracted || extracted.items.length === 0) {
+      return NextResponse.json({ error: 'No valid receipt items were found. Try a clearer photo.' }, { status: 422 })
     }
 
     // 4. Count the scan (only successful scans, and not for admins)
@@ -118,7 +201,8 @@ export async function POST(req: NextRequest) {
     )
 
     return NextResponse.json({
-      rawText,
+      items: extracted.items,
+      receiptTotal: extracted.receiptTotal,
       scanCount: newCount,
       scanLimit: userData.scanLimit,
       remaining: admin ? null : Math.max(0, userData.scanLimit - newCount),
