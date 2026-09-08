@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { verifyRequest, isAdminEmail } from '@/lib/apiAuth'
 import { adminDb } from '@/lib/firebaseAdmin'
 
-// Monthly total scans (counts toward Google Cloud Vision's 1000/month free tier)
+// Monthly total scans processed by the configured Hugging Face model.
 export async function GET(req: NextRequest) {
   try {
     const { email } = await verifyRequest(req)
@@ -17,5 +17,5 @@ export async function GET(req: NextRequest) {
     .sort((a, b) => a.month.localeCompare(b.month))
     .slice(-12) // last 12 months
 
-  return NextResponse.json({ months, freeLimit: 1000 })
+  return NextResponse.json({ months })
 }
