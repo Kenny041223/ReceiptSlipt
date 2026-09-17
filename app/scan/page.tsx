@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { parseReceiptText } from '@/lib/receiptParser'
 import { useReceiptSession } from '@/hooks/useReceiptSession'
 import { useAuth } from '@/components/AuthProvider'
 import { auth } from '@/lib/firebase'
@@ -54,10 +53,10 @@ export default function ScanPage() {
         }
         if (!res.ok) throw new Error(data.error || 'OCR failed')
 
-        const parsed = parseReceiptText(data.rawText)
-        const receiptItems: ReceiptItem[] = parsed.map(p => ({ ...p, assignedTo: [] }))
+        if (!Array.isArray(data.items)) throw new Error('The receipt did not contain any readable items')
+        const receiptItems: ReceiptItem[] = data.items.map((item: Omit<ReceiptItem, 'assignedTo'>) => ({ ...item, assignedTo: [] }))
         setItems(receiptItems)
-        updateSession({ items: receiptItems, rawText: data.rawText })
+        updateSession({ items: receiptItems })
         refreshProfile()
         setStatus('done')
       } catch (e: any) {
@@ -166,6 +165,7 @@ export default function ScanPage() {
                   </div>
                 ))}
               </div>
+              <p className="muted" style={{ fontSize: 12, margin: '14px 0 0' }}>Review the extracted items before assigning the bill.</p>
               {items.length === 0 && <div className="preview-empty"><ReceiptIcon /><div style={{ fontSize: 14 }}>No items found — try editing manually.</div></div>}
               {allRevealed && (
                 <button className="btn btn--primary btn--block" style={{ marginTop: 18 }} onClick={() => { updateSession({ items }); router.push('/split') }}>

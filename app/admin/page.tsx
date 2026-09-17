@@ -18,7 +18,6 @@ export default function AdminPage() {
   const { user, profile, loading } = useAuth()
   const [users, setUsers] = useState<AdminUser[]>([])
   const [usage, setUsage] = useState<MonthUsage[]>([])
-  const [freeLimit, setFreeLimit] = useState(1000)
   const [fetching, setFetching] = useState(true)
   const [savingUid, setSavingUid] = useState('')
   const [drafts, setDrafts] = useState<Record<string, number>>({})
@@ -45,7 +44,6 @@ export default function AdminPage() {
       if (res.ok) {
         const data = await res.json()
         setUsage(data.months || [])
-        setFreeLimit(data.freeLimit ?? 1000)
       }
     } catch { /* ignore */ }
   }
@@ -90,7 +88,7 @@ export default function AdminPage() {
 
   const clientMonth = (() => { const n = new Date(); return `${n.getUTCFullYear()}-${String(n.getUTCMonth() + 1).padStart(2, '0')}` })()
   const currentCount = usage.find(u => u.month === clientMonth)?.count ?? 0
-  const maxScale = Math.max(freeLimit, ...usage.map(u => u.count), 1)
+  const maxScale = Math.max(...usage.map(u => u.count), 1)
   const monthLabel = (m: string) => { const [y, mo] = m.split('-'); return new Date(+y, +mo - 1, 1).toLocaleDateString('en-MY', { month: 'short' }) }
   const SCALE_H = 110
 
@@ -101,11 +99,11 @@ export default function AdminPage() {
         <span className="scan-pill">{users.length} users</span>
       </div>
 
-      {/* monthly scan usage chart (Google Cloud Vision free tier = freeLimit/month) */}
+      {/* Monthly scan usage for the configured Hugging Face model. */}
       <div className="glass" style={{ padding: 22, marginBottom: 22 }}>
         <div className="section-label" style={{ marginBottom: 18 }}>
           <h2 className="display" style={{ fontSize: 18 }}>Scan usage / month</h2>
-          <span className={`scan-pill ${currentCount >= freeLimit ? 'is-out' : ''}`}>{currentCount} / {freeLimit} this month</span>
+          <span className="scan-pill">{currentCount} this month</span>
         </div>
 
         {usage.length === 0 ? (
@@ -113,18 +111,13 @@ export default function AdminPage() {
         ) : (
           <>
             <div style={{ position: 'relative', height: SCALE_H + 22 }}>
-              {/* free-tier reference line */}
-              <div style={{ position: 'absolute', left: 0, right: 0, bottom: `${(freeLimit / maxScale) * SCALE_H}px`, borderTop: '1px dashed var(--primary)', opacity: .55 }}>
-                <span style={{ position: 'absolute', right: 0, top: -15, fontSize: 10, fontWeight: 700, color: 'var(--primary)' }}>free {freeLimit}</span>
-              </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: '100%' }}>
                 {usage.map(u => {
-                  const over = u.count >= freeLimit
                   const h = Math.max(4, (u.count / maxScale) * SCALE_H)
                   return (
                     <div key={u.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                      <span className="tnum" style={{ fontSize: 11, fontWeight: 700, color: over ? '#f0563f' : 'var(--muted)' }}>{u.count}</span>
-                      <div style={{ width: '100%', maxWidth: 34, height: h, borderRadius: 8, background: over ? '#f0563f' : 'var(--primary)' }} />
+                      <span className="tnum" style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)' }}>{u.count}</span>
+                      <div style={{ width: '100%', maxWidth: 34, height: h, borderRadius: 8, background: 'var(--primary)' }} />
                     </div>
                   )
                 })}
@@ -139,7 +132,7 @@ export default function AdminPage() {
         )}
 
         <p className="muted" style={{ fontSize: 12, marginTop: 16 }}>
-          Google Cloud Vision is free up to {freeLimit} scans/month; beyond that it&apos;s billed. Each user&apos;s quota resets on the 1st of each month.
+          This tracks successful scans sent to Hugging Face. User scan quotas reset on the 1st of each month.
         </p>
       </div>
 
